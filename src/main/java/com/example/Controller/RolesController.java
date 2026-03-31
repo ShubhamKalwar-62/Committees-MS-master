@@ -1,0 +1,86 @@
+package com.example.Controller;
+
+import com.example.Entity.Roles;
+import com.example.Response.ResponceBean;
+import com.example.Service.RolesService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/roles")
+@Tag(name = "Role Management", description = "APIs for managing committee roles")
+public class RolesController {
+    
+    @Autowired
+    private RolesService rolesService;
+    
+    @GetMapping
+    @Operation(summary = "Get all roles", description = "Retrieve all roles")
+    public ResponseEntity<ResponceBean<List<Roles>>> getAllRoles() {
+        List<Roles> roles = rolesService.getAllRoles();
+        return ResponseEntity.ok(ResponceBean.success("Roles retrieved successfully", roles));
+    }
+    
+    @GetMapping("/{id}")
+    @Operation(summary = "Get role by ID", description = "Retrieve a specific role by ID")
+    public ResponseEntity<ResponceBean<Roles>> getRoleById(@PathVariable Integer id) {
+        Optional<Roles> role = rolesService.getRoleById(id);
+        if (role.isPresent()) {
+            return ResponseEntity.ok(ResponceBean.success("Role retrieved successfully", role.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ResponceBean.error("Role not found"));
+    }
+    
+    @GetMapping("/committee/{committeeId}")
+    @Operation(summary = "Get roles by committee", description = "Retrieve roles by committee ID")
+    public ResponseEntity<ResponceBean<List<Roles>>> getRolesByCommittee(@PathVariable Integer committeeId) {
+        List<Roles> roles = rolesService.getRolesByCommitteeId(committeeId);
+        return ResponseEntity.ok(ResponceBean.success("Roles retrieved successfully", roles));
+    }
+    
+    @GetMapping("/search")
+    @Operation(summary = "Search roles by name", description = "Search roles by name containing keyword")
+    public ResponseEntity<ResponceBean<List<Roles>>> searchRolesByName(@RequestParam String name) {
+        List<Roles> roles = rolesService.getRolesByRoleName(name);
+        return ResponseEntity.ok(ResponceBean.success("Roles found", roles));
+    }
+    
+    @PostMapping
+    @Operation(summary = "Create new role", description = "Create a new role")
+    public ResponseEntity<ResponceBean<Roles>> createRole(@RequestBody Roles role) {
+        Roles savedRole = rolesService.saveRole(role);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponceBean.success("Role created successfully", savedRole));
+    }
+    
+    @PutMapping("/{id}")
+    @Operation(summary = "Update role", description = "Update an existing role")
+    public ResponseEntity<ResponceBean<Roles>> updateRole(@PathVariable Integer id, @RequestBody Roles roleDetails) {
+        Roles updatedRole = rolesService.updateRole(id, roleDetails);
+        if (updatedRole != null) {
+            return ResponseEntity.ok(ResponceBean.success("Role updated successfully", updatedRole));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ResponceBean.error("Role not found"));
+    }
+    
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete role", description = "Delete a role")
+    public ResponseEntity<ResponceBean<String>> deleteRole(@PathVariable Integer id) {
+        Optional<Roles> role = rolesService.getRoleById(id);
+        if (role.isPresent()) {
+            rolesService.deleteRole(id);
+            return ResponseEntity.ok(ResponceBean.success("Role deleted successfully"));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ResponceBean.error("Role not found"));
+    }
+}
