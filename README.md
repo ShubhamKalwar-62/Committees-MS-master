@@ -48,7 +48,7 @@ Before running this application, make sure you have:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Gaikwadshlok/Committees-MS.git
+git clone https://github.com/ShubhamKalwar-62/Committees-MS-master.git
 cd Committees-MS
 ```
 
