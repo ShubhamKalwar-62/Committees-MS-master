@@ -1,0 +1,8 @@
+<section *ngIf="committee" class="card shadow-sm">
+	<div class="card-body">
+		<h3>{{ committee.committeeName }}</h3>
+		<p class="mb-1"><strong>Faculty Incharge:</strong> {{ committee.facultyInchargeName || '-' }}</p>
+		<p class="mb-1"><strong>Position:</strong> {{ committee.facultyPosition || '-' }}</p>
+		<p class="mb-0"><strong>About:</strong> {{ committee.committeeInfo || 'No details available' }}</p>
+	</div>
+</section>

@@ -1,213 +1,252 @@
--- Committees Management System Database Schema
+-- Committees Management System Database Schema (ERD aligned)
 -- PostgreSQL Database Creation Script
 
--- Drop existing tables if they exist (in reverse order of dependencies)
-DROP TABLE IF EXISTS Event_Media CASCADE;
-DROP TABLE IF EXISTS Event_Feedback CASCADE;
-DROP TABLE IF EXISTS Event_participants CASCADE;
-DROP TABLE IF EXISTS Events CASCADE;
-DROP TABLE IF EXISTS Committee_Chat CASCADE;
-DROP TABLE IF EXISTS Announcements CASCADE;
-DROP TABLE IF EXISTS Task CASCADE;
-DROP TABLE IF EXISTS Roles CASCADE;
-DROP TABLE IF EXISTS Committee CASCADE;
-DROP TABLE IF EXISTS Users CASCADE;
-DROP TABLE IF EXISTS Login CASCADE;
+-- Drop tables in reverse dependency order
+DROP TABLE IF EXISTS attendance CASCADE;
+DROP TABLE IF EXISTS event_media CASCADE;
+DROP TABLE IF EXISTS event_feedback CASCADE;
+DROP TABLE IF EXISTS event_participants CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS event_category CASCADE;
+DROP TABLE IF EXISTS announcements CASCADE;
+DROP TABLE IF EXISTS task CASCADE;
+DROP TABLE IF EXISTS committee CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS login CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
 
--- 1. Login Table (Base table for authentication)
-CREATE TABLE Login (
-    Login_id SERIAL PRIMARY KEY,
-    Email VARCHAR(255) NOT NULL UNIQUE,
-    Password VARCHAR(255) NOT NULL,
-    Role VARCHAR(100) DEFAULT 'USER',
+-- 1) Roles
+CREATE TABLE roles (
+    role_id SERIAL PRIMARY KEY,
+    role_name VARCHAR(100) NOT NULL UNIQUE,
+    -- Legacy link retained for compatibility with existing Role APIs
+    committee_id INTEGER NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Users Table
-CREATE TABLE Users (
-    User_id SERIAL PRIMARY KEY,
-    Login_id INTEGER NOT NULL,
-    Name VARCHAR(255) NOT NULL,
+-- 2) Login
+CREATE TABLE login (
+    login_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role_id INTEGER NULL,
+    -- Legacy role text retained for JWT/auth compatibility
+    role VARCHAR(100) DEFAULT 'USER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Login_id) REFERENCES Login(Login_id) ON DELETE CASCADE
+    CONSTRAINT fk_login_role FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE SET NULL
 );
 
--- 3. Committee Table
-CREATE TABLE Committee (
-    Committee_id SERIAL PRIMARY KEY,
-    Committee_name VARCHAR(255) NOT NULL,
-    Login_id INTEGER NOT NULL,
-    Faculty_incharge_name VARCHAR(255),
-    Faculty_position VARCHAR(255),
-    Committee_info TEXT,
+-- 3) Users
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    login_id INTEGER NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Login_id) REFERENCES Login(Login_id) ON DELETE CASCADE
+    CONSTRAINT fk_users_login FOREIGN KEY (login_id) REFERENCES login(login_id) ON DELETE CASCADE
 );
 
--- 4. Roles Table
-CREATE TABLE Roles (
-    Role_id SERIAL PRIMARY KEY,
-    Role_name VARCHAR(100) NOT NULL,
-    Committee_id INTEGER NOT NULL,
+-- 4) Committee
+CREATE TABLE committee (
+    committee_id SERIAL PRIMARY KEY,
+    committee_name VARCHAR(255) NOT NULL,
+    head_id INTEGER NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Committee_id) REFERENCES Committee(Committee_id) ON DELETE CASCADE
-);
 
--- 5. Announcements Table
-CREATE TABLE Announcements (
-    Announcement_id SERIAL PRIMARY KEY,
-    Message TEXT NOT NULL,
-    User_id INTEGER NOT NULL,
-    Committee_id INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Legacy columns retained for existing service/repository methods
+    login_id INTEGER NULL,
+    faculty_incharge_name VARCHAR(255),
+    faculty_position VARCHAR(255),
+    committee_info TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(User_id) ON DELETE CASCADE,
-    FOREIGN KEY (Committee_id) REFERENCES Committee(Committee_id) ON DELETE CASCADE
+
+    CONSTRAINT fk_committee_head FOREIGN KEY (head_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    CONSTRAINT fk_committee_login FOREIGN KEY (login_id) REFERENCES login(login_id) ON DELETE SET NULL
 );
 
--- 6. Committee_Chat Table
-CREATE TABLE Committee_Chat (
-    Chat_id SERIAL PRIMARY KEY,
-    Committee_id INTEGER NOT NULL,
-    User_id INTEGER NOT NULL,
-    Message TEXT NOT NULL,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Committee_id) REFERENCES Committee(Committee_id) ON DELETE CASCADE,
-    FOREIGN KEY (User_id) REFERENCES Users(User_id) ON DELETE CASCADE
-);
+ALTER TABLE roles
+    ADD CONSTRAINT fk_roles_committee FOREIGN KEY (committee_id) REFERENCES committee(committee_id) ON DELETE SET NULL;
 
--- 7. Events Table
-CREATE TABLE Events (
-    Event_id SERIAL PRIMARY KEY,
-    Event_name VARCHAR(255) NOT NULL,
-    Event_date DATE NOT NULL,
-    Event_hrs VARCHAR(100),
-    Venue VARCHAR(255),
-    Reg_form_link TEXT,
-    Committee_id INTEGER NOT NULL,
+-- 5) Event Category
+CREATE TABLE event_category (
+    category_id SERIAL PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Committee_id) REFERENCES Committee(Committee_id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 8. Event_participants Table (Junction table)
-CREATE TABLE Event_participants (
-    EP_id SERIAL PRIMARY KEY,
-    User_id INTEGER NOT NULL,
-    Event_id INTEGER NOT NULL,
-    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(User_id) ON DELETE CASCADE,
-    FOREIGN KEY (Event_id) REFERENCES Events(Event_id) ON DELETE CASCADE,
-    UNIQUE(User_id, Event_id) -- Prevent duplicate registrations
-);
-
--- 9. Event_Feedback Table
-CREATE TABLE Event_Feedback (
-    Feedback_id SERIAL PRIMARY KEY,
-    User_id INTEGER NOT NULL,
-    Event_id INTEGER NOT NULL,
-    Feedback_text TEXT,
-    Rating INTEGER CHECK (Rating >= 1 AND Rating <= 5),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(User_id) ON DELETE CASCADE,
-    FOREIGN KEY (Event_id) REFERENCES Events(Event_id) ON DELETE CASCADE,
-    UNIQUE(User_id, Event_id) -- One feedback per user per event
-);
-
--- 10. Event_Media Table
-CREATE TABLE Event_Media (
-    Media_id SERIAL PRIMARY KEY,
-    User_id INTEGER NOT NULL,
-    Event_id INTEGER NOT NULL,
-    Media_type VARCHAR(100) CHECK (Media_type IN ('IMAGE', 'VIDEO', 'DOCUMENT', 'AUDIO')),
-    Media_url TEXT NOT NULL,
-    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (User_id) REFERENCES Users(User_id) ON DELETE CASCADE,
-    FOREIGN KEY (Event_id) REFERENCES Events(Event_id) ON DELETE CASCADE
-);
-
--- 11. Task Table
-CREATE TABLE Task (
-    task_id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    status VARCHAR(100) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
-    due_date DATE,
+-- 6) Events
+CREATE TABLE events (
+    event_id SERIAL PRIMARY KEY,
+    event_name VARCHAR(255) NOT NULL,
+    event_date TIMESTAMP,
+    venue VARCHAR(255),
+    category_id INTEGER,
     committee_id INTEGER NOT NULL,
-    assigned_to_user_id INTEGER,
+
+    -- Legacy columns retained for existing event APIs
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'PLANNED',
+    max_participants INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (committee_id) REFERENCES Committee(Committee_id) ON DELETE CASCADE,
-    FOREIGN KEY (assigned_to_user_id) REFERENCES Users(User_id) ON DELETE SET NULL
+
+    CONSTRAINT fk_events_category FOREIGN KEY (category_id) REFERENCES event_category(category_id) ON DELETE SET NULL,
+    CONSTRAINT fk_events_committee FOREIGN KEY (committee_id) REFERENCES committee(committee_id) ON DELETE CASCADE,
+    CONSTRAINT ck_events_status CHECK (status IN ('PLANNED', 'ONGOING', 'COMPLETED', 'CANCELLED'))
 );
 
--- Create indexes for better performance
-CREATE INDEX idx_users_login_id ON Users(Login_id);
-CREATE INDEX idx_committee_login_id ON Committee(Login_id);
-CREATE INDEX idx_announcements_user_id ON Announcements(User_id);
-CREATE INDEX idx_announcements_committee_id ON Announcements(Committee_id);
-CREATE INDEX idx_committee_chat_committee_id ON Committee_Chat(Committee_id);
-CREATE INDEX idx_committee_chat_user_id ON Committee_Chat(User_id);
-CREATE INDEX idx_events_committee_id ON Events(Committee_id);
-CREATE INDEX idx_event_participants_user_id ON Event_participants(User_id);
-CREATE INDEX idx_event_participants_event_id ON Event_participants(Event_id);
-CREATE INDEX idx_event_feedback_user_id ON Event_Feedback(User_id);
-CREATE INDEX idx_event_feedback_event_id ON Event_Feedback(Event_id);
-CREATE INDEX idx_event_media_event_id ON Event_Media(Event_id);
-CREATE INDEX idx_task_committee_id ON Task(committee_id);
-CREATE INDEX idx_task_assigned_user_id ON Task(assigned_to_user_id);
+-- 7) Announcements
+CREATE TABLE announcements (
+    announcement_id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    committee_id INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_announcements_committee FOREIGN KEY (committee_id) REFERENCES committee(committee_id) ON DELETE CASCADE,
+    CONSTRAINT fk_announcements_created_by FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
+);
 
--- Create triggers to auto-update the updated_at timestamp
+-- 8) Task
+CREATE TABLE task (
+    task_id SERIAL PRIMARY KEY,
+    committee_id INTEGER NOT NULL,
+    assigned_to INTEGER,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+
+    -- Legacy columns retained for existing task APIs
+    created_by INTEGER,
+    description TEXT,
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_task_committee FOREIGN KEY (committee_id) REFERENCES committee(committee_id) ON DELETE CASCADE,
+    CONSTRAINT fk_task_assigned_to FOREIGN KEY (assigned_to) REFERENCES users(user_id) ON DELETE SET NULL,
+    CONSTRAINT fk_task_created_by FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL,
+    CONSTRAINT ck_task_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    CONSTRAINT ck_task_priority CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT'))
+);
+
+-- 9) Event Participants
+CREATE TABLE event_participants (
+    ep_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    event_id INTEGER NOT NULL,
+
+    -- Legacy columns retained for existing participant APIs
+    status VARCHAR(20) DEFAULT 'REGISTERED',
+    attended BOOLEAN DEFAULT FALSE,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_event_participants_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_participants_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+    CONSTRAINT uq_event_participants UNIQUE (user_id, event_id),
+    CONSTRAINT ck_event_participants_status CHECK (status IN ('REGISTERED', 'CONFIRMED', 'CANCELLED', 'ATTENDED'))
+);
+
+-- 10) Event Feedback
+CREATE TABLE event_feedback (
+    feedback_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    event_id INTEGER NOT NULL,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+
+    -- Legacy timestamp retained for ordering query
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_event_feedback_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_feedback_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+    CONSTRAINT uq_event_feedback UNIQUE (user_id, event_id)
+);
+
+-- 11) Event Media
+CREATE TABLE event_media (
+    media_id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    media_type VARCHAR(20) NOT NULL,
+    media_url TEXT NOT NULL,
+
+    -- Legacy file metadata retained for existing media APIs
+    file_size BIGINT,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_event_media_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+    CONSTRAINT ck_event_media_type CHECK (media_type IN ('IMAGE', 'VIDEO', 'DOCUMENT', 'AUDIO'))
+);
+
+-- 12) Attendance
+CREATE TABLE attendance (
+    attendance_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    event_id INTEGER NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    check_out_time TIMESTAMP,
+    attendance_method VARCHAR(20),
+    marked_by INTEGER,
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_attendance_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_attendance_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+    CONSTRAINT fk_attendance_marked_by FOREIGN KEY (marked_by) REFERENCES users(user_id) ON DELETE SET NULL,
+    CONSTRAINT ck_attendance_status CHECK (status IN ('PRESENT', 'ABSENT', 'LATE')),
+    CONSTRAINT ck_attendance_method CHECK (attendance_method IN ('QR', 'MANUAL'))
+);
+
+-- Indexes
+CREATE INDEX idx_login_role_id ON login(role_id);
+CREATE INDEX idx_users_login_id ON users(login_id);
+CREATE INDEX idx_committee_head_id ON committee(head_id);
+CREATE INDEX idx_committee_login_id ON committee(login_id);
+CREATE INDEX idx_events_committee_id ON events(committee_id);
+CREATE INDEX idx_events_category_id ON events(category_id);
+CREATE INDEX idx_announcements_committee_id ON announcements(committee_id);
+CREATE INDEX idx_announcements_created_by ON announcements(created_by);
+CREATE INDEX idx_task_committee_id ON task(committee_id);
+CREATE INDEX idx_task_assigned_to ON task(assigned_to);
+CREATE INDEX idx_event_participants_event_id ON event_participants(event_id);
+CREATE INDEX idx_event_participants_user_id ON event_participants(user_id);
+CREATE INDEX idx_event_feedback_event_id ON event_feedback(event_id);
+CREATE INDEX idx_event_media_event_id ON event_media(event_id);
+CREATE INDEX idx_attendance_event_id ON attendance(event_id);
+CREATE INDEX idx_attendance_user_id ON attendance(user_id);
+
+-- Trigger for updated_at maintenance
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Apply triggers to tables with updated_at columns
-CREATE TRIGGER update_login_updated_at BEFORE UPDATE ON Login FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON Users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_committee_updated_at BEFORE UPDATE ON Committee FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_announcements_updated_at BEFORE UPDATE ON Announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON Events FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_task_updated_at BEFORE UPDATE ON Task FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_login_updated_at BEFORE UPDATE ON login FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_committee_updated_at BEFORE UPDATE ON committee FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_announcements_updated_at BEFORE UPDATE ON announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON events FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_task_updated_at BEFORE UPDATE ON task FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_category_updated_at BEFORE UPDATE ON event_category FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_participants_updated_at BEFORE UPDATE ON event_participants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_feedback_updated_at BEFORE UPDATE ON event_feedback FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_media_updated_at BEFORE UPDATE ON event_media FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Insert sample data for testing
-INSERT INTO Login (Email, Password, Role) VALUES 
-('admin@university.edu', '$2a$10$DemoHashedPassword123', 'ADMIN'),
-('john.doe@university.edu', '$2a$10$DemoHashedPassword456', 'FACULTY'),
-('jane.smith@university.edu', '$2a$10$DemoHashedPassword789', 'STUDENT'),
-('mike.wilson@university.edu', '$2a$10$DemoHashedPasswordABC', 'STUDENT');
+-- Seed roles
+INSERT INTO roles (role_name) VALUES ('ADMIN'), ('FACULTY'), ('STUDENT');
 
-INSERT INTO Users (Login_id, Name) VALUES 
-(1, 'System Administrator'),
-(2, 'Dr. John Doe'),
-(3, 'Jane Smith'),
-(4, 'Mike Wilson');
-
-INSERT INTO Committee (Committee_name, Login_id, Faculty_incharge_name, Faculty_position, Committee_info) VALUES 
-('Academic Excellence Committee', 2, 'Dr. John Doe', 'Professor', 'Committee focused on improving academic standards and student performance'),
-('Cultural Committee', 2, 'Dr. John Doe', 'Professor', 'Organizing cultural events and activities for students'),
-('Sports Committee', 2, 'Dr. John Doe', 'Professor', 'Managing sports activities and competitions');
-
-INSERT INTO Events (Event_name, Event_date, Event_hrs, Venue, Committee_id) VALUES 
-('Annual Tech Symposium', '2025-11-15', '9:00 AM - 5:00 PM', 'Main Auditorium', 1),
-('Cultural Fest 2025', '2025-12-20', '6:00 PM - 11:00 PM', 'Campus Ground', 2),
-('Inter-College Cricket Tournament', '2025-11-25', '8:00 AM - 6:00 PM', 'Sports Complex', 3);
-
-INSERT INTO Task (title, status, due_date, committee_id, assigned_to_user_id) VALUES 
-('Prepare symposium agenda', 'IN_PROGRESS', '2025-11-10', 1, 3),
-('Book venue for cultural fest', 'PENDING', '2025-11-30', 2, 4),
-('Arrange cricket equipment', 'COMPLETED', '2025-11-20', 3, 3);
-
--- Display table information
-SELECT 'Database schema created successfully!' as status;
-
--- Show all tables created
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
-ORDER BY table_name;
+SELECT 'Database schema created successfully!' AS status;

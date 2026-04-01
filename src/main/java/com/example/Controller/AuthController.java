@@ -1,22 +1,28 @@
 package com.example.Controller;
 
-import com.example.Entity.Login;
-import com.example.Entity.Users;
-import com.example.Repository.LoginRepository;
-import com.example.Repository.UsersRepository;
-import com.example.Security.JwtUtil;
-import com.example.Response.ResponceBean;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.example.Entity.Login;
+import com.example.Entity.Roles;
+import com.example.Entity.Users;
+import com.example.Repository.LoginRepository;
+import com.example.Repository.RolesRepository;
+import com.example.Repository.UsersRepository;
+import com.example.Response.ResponceBean;
+import com.example.Security.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,10 +44,13 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RolesRepository rolesRepository;
+
     @PostMapping("/login")
     public ResponseEntity<ResponceBean<Map<String, Object>>> login(@RequestBody LoginRequest loginRequest) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.getEmail(), 
                     loginRequest.getPassword()
@@ -85,13 +94,20 @@ public class AuthController {
             login.setEmail(registerRequest.getEmail());
             login.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             login.setRole(registerRequest.getRole() != null ? registerRequest.getRole() : "STUDENT");
+            if (registerRequest.getRole() != null) {
+                Roles role = rolesRepository.findByRoleName(registerRequest.getRole())
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+                login.setRoleRef(role);
+            }
             loginRepository.save(login);
 
             // Create new user if provided
             if (registerRequest.getName() != null) {
                 Users user = new Users();
                 user.setName(registerRequest.getName());
-                // Note: Users entity might not have all these fields, adjust as needed
+                user.setLogin(login);
                 usersRepository.save(user);
             }
 

@@ -1,11 +1,25 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "events")
@@ -19,6 +33,10 @@ public class Events {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "committee_id", nullable = false)
     private Committee committee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private EventCategory category;
     
     @NotBlank(message = "Event name is required")
     @Column(name = "event_name", nullable = false, length = 100)
@@ -30,7 +48,7 @@ public class Events {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
     
-    @Column(length = 200)
+    @Column(name = "venue", length = 200)
     private String location;
     
     @Enumerated(EnumType.STRING)
@@ -43,6 +61,10 @@ public class Events {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
     // One-to-Many relationships
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -85,6 +107,14 @@ public class Events {
     public void setCommittee(Committee committee) {
         this.committee = committee;
     }
+
+    public EventCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(EventCategory category) {
+        this.category = category;
+    }
     
     public String getEventName() {
         return eventName;
@@ -117,6 +147,14 @@ public class Events {
     public void setLocation(String location) {
         this.location = location;
     }
+
+    public String getVenue() {
+        return location;
+    }
+
+    public void setVenue(String venue) {
+        this.location = venue;
+    }
     
     public EventStatus getStatus() {
         return status;
@@ -140,6 +178,14 @@ public class Events {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
     
     public List<EventParticipants> getParticipants() {

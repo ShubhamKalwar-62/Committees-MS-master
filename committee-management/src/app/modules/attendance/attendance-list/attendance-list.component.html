@@ -1,0 +1,28 @@
+<section>
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Attendance</h2>
+		<a routerLink="/attendance/mark" class="btn btn-primary">Mark Attendance</a>
+	</div>
+	<div class="table-responsive bg-white rounded-3 shadow-sm p-2">
+		<table class="table table-striped mb-0">
+			<thead>
+				<tr>
+					<th>User ID</th>
+					<th>Event ID</th>
+					<th>Status</th>
+					<th>Check In</th>
+					<th>Remarks</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let item of records">
+					<td>{{ item.userId }}</td>
+					<td>{{ item.eventId }}</td>
+					<td>{{ item.status }}</td>
+					<td>{{ item.checkInTime || '-' }}</td>
+					<td>{{ item.remarks || '-' }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>

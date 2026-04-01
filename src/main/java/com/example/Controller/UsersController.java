@@ -1,17 +1,29 @@
 package com.example.Controller;
 
-import com.example.Entity.Users;
-import com.example.Response.ResponceBean;
-import com.example.Service.UsersService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Users;
+import com.example.Response.ResponceBean;
+import com.example.Service.UsersService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +32,9 @@ public class UsersController {
     
     @Autowired
     private UsersService usersService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieve all users")
@@ -74,6 +89,24 @@ public class UsersController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("User not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch user", description = "Partially update an existing user")
+    public ResponseEntity<ResponceBean<Users>> patchUser(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<Users> existing = usersService.getUserById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("User not found"));
+        }
+        try {
+            updates.remove("userId");
+            updates.remove("createdAt");
+            Users patched = objectMapper.updateValue(existing.get(), updates);
+            Users saved = usersService.saveUser(patched);
+            return ResponseEntity.ok(ResponceBean.success("User patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

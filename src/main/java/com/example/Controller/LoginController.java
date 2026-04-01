@@ -1,17 +1,28 @@
 package com.example.Controller;
 
-import com.example.Entity.Login;
-import com.example.Response.ResponceBean;
-import com.example.Service.LoginService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Login;
+import com.example.Response.ResponceBean;
+import com.example.Service.LoginService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/login")
@@ -20,6 +31,9 @@ public class LoginController {
     
     @Autowired
     private LoginService loginService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all logins", description = "Retrieve all login records")
@@ -82,6 +96,24 @@ public class LoginController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Login not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch login", description = "Partially update login account")
+    public ResponseEntity<ResponceBean<Login>> patchLogin(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<Login> existing = loginService.getLoginById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Login not found"));
+        }
+        try {
+            updates.remove("loginId");
+            updates.remove("createdAt");
+            Login patched = objectMapper.updateValue(existing.get(), updates);
+            Login saved = loginService.saveLogin(patched);
+            return ResponseEntity.ok(ResponceBean.success("Login patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

@@ -1,17 +1,29 @@
 package com.example.Controller;
 
-import com.example.Entity.EventFeedback;
-import com.example.Response.ResponceBean;
-import com.example.Service.EventFeedbackService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.EventFeedback;
+import com.example.Response.ResponceBean;
+import com.example.Service.EventFeedbackService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/event-feedback")
@@ -20,6 +32,9 @@ public class EventFeedbackController {
     
     @Autowired
     private EventFeedbackService eventFeedbackService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all feedback", description = "Retrieve all event feedback")
@@ -91,6 +106,24 @@ public class EventFeedbackController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Feedback not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch feedback", description = "Partially update feedback")
+    public ResponseEntity<ResponceBean<EventFeedback>> patchFeedback(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<EventFeedback> existing = eventFeedbackService.getFeedbackById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Feedback not found"));
+        }
+        try {
+            updates.remove("feedbackId");
+            updates.remove("submittedAt");
+            EventFeedback patched = objectMapper.updateValue(existing.get(), updates);
+            EventFeedback saved = eventFeedbackService.saveFeedback(patched);
+            return ResponseEntity.ok(ResponceBean.success("Feedback patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

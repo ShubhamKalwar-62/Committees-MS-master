@@ -1,0 +1,12 @@
+<section>
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Announcements</h2>
+		<a routerLink="/announcements/create" class="btn btn-primary">Create Announcement</a>
+	</div>
+
+	<div class="row g-3">
+		<div class="col-md-6" *ngFor="let announcement of announcements">
+			<app-reusable-card [title]="announcement.message" [subtitle]="announcement.createdAt || 'Recent update'"></app-reusable-card>
+		</div>
+	</div>
+</section>

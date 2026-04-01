@@ -1,12 +1,23 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "users")
@@ -17,8 +28,8 @@ public class Users {
     @Column(name = "user_id")
     private Integer userId;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "login_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "login_id", nullable = false, unique = true)
     private Login login;
     
     @NotBlank(message = "Name is required")
@@ -38,9 +49,6 @@ public class Users {
     private List<Announcements> announcements;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CommitteeChat> committeeChats;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EventParticipants> eventParticipations;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -51,6 +59,12 @@ public class Users {
     
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Task> createdTasks;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Attendance> attendanceRecords;
+
+    @OneToMany(mappedBy = "markedBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Attendance> markedAttendanceRecords;
     
     // Constructors
     public Users() {}
@@ -109,14 +123,6 @@ public class Users {
         this.announcements = announcements;
     }
     
-    public List<CommitteeChat> getCommitteeChats() {
-        return committeeChats;
-    }
-    
-    public void setCommitteeChats(List<CommitteeChat> committeeChats) {
-        this.committeeChats = committeeChats;
-    }
-    
     public List<EventParticipants> getEventParticipations() {
         return eventParticipations;
     }
@@ -147,5 +153,21 @@ public class Users {
     
     public void setCreatedTasks(List<Task> createdTasks) {
         this.createdTasks = createdTasks;
+    }
+
+    public List<Attendance> getAttendanceRecords() {
+        return attendanceRecords;
+    }
+
+    public void setAttendanceRecords(List<Attendance> attendanceRecords) {
+        this.attendanceRecords = attendanceRecords;
+    }
+
+    public List<Attendance> getMarkedAttendanceRecords() {
+        return markedAttendanceRecords;
+    }
+
+    public void setMarkedAttendanceRecords(List<Attendance> markedAttendanceRecords) {
+        this.markedAttendanceRecords = markedAttendanceRecords;
     }
 }

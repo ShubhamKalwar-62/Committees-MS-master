@@ -1,0 +1,28 @@
+import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Committee } from '../../../models/committee.model';
+import { CommitteeService } from '../../../services/committee.service';
+
+@Component({
+  selector: 'app-committee-detail',
+  standalone: false,
+  templateUrl: './committee-detail.component.html',
+  styleUrl: './committee-detail.component.css'
+})
+export class CommitteeDetailComponent {
+  committee?: Committee;
+
+  constructor(private route: ActivatedRoute, private committeeService: CommitteeService) {}
+
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (!id) {
+      return;
+    }
+
+    this.committeeService.getCommitteeById(id).subscribe((committee) => {
+      this.committee = committee;
+    });
+  }
+
+}

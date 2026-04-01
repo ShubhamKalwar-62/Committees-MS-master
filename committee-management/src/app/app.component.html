@@ -1,0 +1,7 @@
+<div class="app-shell d-flex flex-column min-vh-100">
+  <app-header [appName]="appName"></app-header>
+  <main class="container-fluid py-4 flex-grow-1">
+    <router-outlet></router-outlet>
+  </main>
+  <app-footer [year]="currentYear"></app-footer>
+</div>

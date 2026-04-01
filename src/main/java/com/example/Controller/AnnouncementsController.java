@@ -1,19 +1,31 @@
 package com.example.Controller;
 
-import com.example.Entity.Announcements;
-import com.example.Response.ResponceBean;
-import com.example.Service.AnnouncementsService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Announcements;
+import com.example.Response.ResponceBean;
+import com.example.Service.AnnouncementsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/announcements")
@@ -22,6 +34,9 @@ public class AnnouncementsController {
     
     @Autowired
     private AnnouncementsService announcementsService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all announcements", description = "Retrieve all announcements")
@@ -81,6 +96,24 @@ public class AnnouncementsController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Announcement not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch announcement", description = "Partially update an announcement")
+    public ResponseEntity<ResponceBean<Announcements>> patchAnnouncement(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<Announcements> existing = announcementsService.getAnnouncementById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Announcement not found"));
+        }
+        try {
+            updates.remove("announcementId");
+            updates.remove("createdAt");
+            Announcements patched = objectMapper.updateValue(existing.get(), updates);
+            Announcements saved = announcementsService.saveAnnouncement(patched);
+            return ResponseEntity.ok(ResponceBean.success("Announcement patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

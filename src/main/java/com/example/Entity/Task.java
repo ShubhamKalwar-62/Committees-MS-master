@@ -1,10 +1,22 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "task")
@@ -42,8 +54,11 @@ public class Task {
     @Column(nullable = false, length = 20)
     private TaskPriority priority = TaskPriority.MEDIUM;
     
-    @Column(name = "due_date")
-    private LocalDateTime dueDate;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -136,12 +151,20 @@ public class Task {
         this.priority = priority;
     }
     
-    public LocalDateTime getDueDate() {
-        return dueDate;
+    public LocalDateTime getStartDate() {
+        return startDate;
     }
     
-    public void setDueDate(LocalDateTime dueDate) {
-        this.dueDate = dueDate;
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
     }
     
     public LocalDateTime getCreatedAt() {

@@ -1,11 +1,20 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "announcements")
@@ -17,11 +26,11 @@ public class Announcements {
     private Integer announcementId;
     
     @NotBlank(message = "Message is required")
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "title", columnDefinition = "TEXT", nullable = false)
     private String message;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false)
     private Users user;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -60,6 +69,14 @@ public class Announcements {
     
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getTitle() {
+        return message;
+    }
+
+    public void setTitle(String title) {
+        this.message = title;
     }
     
     public Users getUser() {

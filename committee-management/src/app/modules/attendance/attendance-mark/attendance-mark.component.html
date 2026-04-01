@@ -1,0 +1,36 @@
+<section class="card shadow-sm">
+	<div class="card-body">
+		<h3 class="mb-3">Mark Attendance</h3>
+		<form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()">
+			<div class="row g-3">
+				<div class="col-md-6">
+					<label class="form-label">User ID</label>
+					<input type="number" class="form-control" formControlName="userId" />
+				</div>
+				<div class="col-md-6">
+					<label class="form-label">Event ID</label>
+					<input type="number" class="form-control" formControlName="eventId" />
+				</div>
+				<div class="col-md-6">
+					<label class="form-label">Status</label>
+					<select class="form-select" formControlName="status">
+						<option value="PRESENT">PRESENT</option>
+						<option value="ABSENT">ABSENT</option>
+						<option value="LATE">LATE</option>
+					</select>
+				</div>
+				<div class="col-md-6">
+					<label class="form-label">Check In</label>
+					<input type="datetime-local" class="form-control" formControlName="checkInTime" />
+				</div>
+				<div class="col-12">
+					<label class="form-label">Remarks</label>
+					<textarea class="form-control" formControlName="remarks"></textarea>
+				</div>
+			</div>
+			<div class="mt-3">
+				<app-reusable-button [type]="'submit'" [disabled]="saving" [label]="saving ? 'Saving...' : 'Mark Attendance'"></app-reusable-button>
+			</div>
+		</form>
+	</div>
+</section>

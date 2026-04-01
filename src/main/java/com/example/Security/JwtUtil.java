@@ -1,17 +1,20 @@
 package com.example.Security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -23,7 +26,11 @@ public class JwtUtil {
     private Long expiration;
     
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        String effectiveSecret = secret;
+        if (effectiveSecret == null || effectiveSecret.length() < 32) {
+            effectiveSecret = "committee-management-system-jwt-secret-key-2026";
+        }
+        return Keys.hmacShaKeyFor(effectiveSecret.getBytes(StandardCharsets.UTF_8));
     }
     
     public String extractUsername(String token) {

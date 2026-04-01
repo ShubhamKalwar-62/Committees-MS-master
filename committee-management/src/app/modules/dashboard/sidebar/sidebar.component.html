@@ -1,0 +1,10 @@
+<div class="list-group shadow-sm">
+	<div class="list-group-item bg-light fw-semibold">Role: {{ role }}</div>
+	<a routerLink="/dashboard" class="list-group-item list-group-item-action">Overview</a>
+	<a *ngIf="canAccessUsers()" routerLink="/users" class="list-group-item list-group-item-action">Users</a>
+	<a routerLink="/events" class="list-group-item list-group-item-action">Events</a>
+	<a *ngIf="canAccessCommittees()" routerLink="/committees" class="list-group-item list-group-item-action">Committees</a>
+	<a routerLink="/tasks" class="list-group-item list-group-item-action">Tasks</a>
+	<a routerLink="/attendance" class="list-group-item list-group-item-action">Attendance</a>
+	<a routerLink="/announcements" class="list-group-item list-group-item-action">Announcements</a>
+</div>

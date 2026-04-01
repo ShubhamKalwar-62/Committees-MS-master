@@ -1,0 +1,15 @@
+<section class="hero p-5 rounded-4 bg-light border">
+	<h1 class="display-6 fw-bold mb-3">Committee & Event Management System</h1>
+	<p class="lead text-muted mb-4">
+		A complete platform for authentication, committee collaboration, event execution, attendance marking, and task tracking.
+	</p>
+	<div class="row g-3 mb-4">
+		<div class="col-md-4" *ngFor="let item of highlights">
+			<app-reusable-card [title]="item" subtitle="Built for student teams and faculty coordinators"></app-reusable-card>
+		</div>
+	</div>
+	<div class="d-flex gap-2">
+		<a routerLink="/auth/login" class="btn btn-primary">Login</a>
+		<a routerLink="/auth/register" class="btn btn-outline-primary">Create Account</a>
+	</div>
+</section>

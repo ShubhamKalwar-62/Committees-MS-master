@@ -1,17 +1,28 @@
 package com.example.Controller;
 
-import com.example.Entity.Task;
-import com.example.Response.ResponceBean;
-import com.example.Service.TaskService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Task;
+import com.example.Response.ResponceBean;
+import com.example.Service.TaskService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -20,6 +31,9 @@ public class TaskController {
     
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all tasks", description = "Retrieve all tasks")
@@ -84,6 +98,24 @@ public class TaskController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Task not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch task", description = "Partially update a task")
+    public ResponseEntity<ResponceBean<Task>> patchTask(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<Task> existing = taskService.getTaskById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Task not found"));
+        }
+        try {
+            updates.remove("taskId");
+            updates.remove("createdAt");
+            Task patched = objectMapper.updateValue(existing.get(), updates);
+            Task saved = taskService.saveTask(patched);
+            return ResponseEntity.ok(ResponceBean.success("Task patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

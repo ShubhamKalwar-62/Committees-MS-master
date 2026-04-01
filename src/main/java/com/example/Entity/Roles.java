@@ -1,10 +1,22 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "roles")
@@ -20,12 +32,19 @@ public class Roles {
     private String roleName;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "committee_id", nullable = false)
+    @JoinColumn(name = "committee_id")
     private Committee committee;
+
+    @OneToMany(mappedBy = "roleRef", fetch = FetchType.LAZY)
+    private List<Login> logins;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
     // Constructors
     public Roles() {}
@@ -66,5 +85,21 @@ public class Roles {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public List<Login> getLogins() {
+        return logins;
+    }
+
+    public void setLogins(List<Login> logins) {
+        this.logins = logins;
     }
 }

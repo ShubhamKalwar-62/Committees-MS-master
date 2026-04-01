@@ -1,0 +1,18 @@
+<section>
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Events</h2>
+		<a routerLink="/events/create" class="btn btn-primary">Create Event</a>
+	</div>
+
+	<p *ngIf="infoMessage" class="text-success">{{ infoMessage }}</p>
+
+	<div class="row g-3">
+		<div class="col-md-6 col-lg-4" *ngFor="let event of events">
+			<app-reusable-card [title]="event.eventName" [subtitle]="event.eventDate"></app-reusable-card>
+			<div class="mt-2 d-flex gap-2">
+				<a class="btn btn-outline-secondary btn-sm" [routerLink]="['/events', event.id]">Details</a>
+				<button class="btn btn-success btn-sm" (click)="register(event.id)">Register</button>
+			</div>
+		</div>
+	</div>
+</section>

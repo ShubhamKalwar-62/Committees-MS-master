@@ -1,0 +1,9 @@
+<section>
+	<h2 class="mb-3">Committees</h2>
+	<div class="row g-3">
+		<div class="col-md-6" *ngFor="let committee of committees">
+			<app-reusable-card [title]="committee.committeeName" [subtitle]="committee.facultyInchargeName || 'N/A'"></app-reusable-card>
+			<a class="btn btn-outline-primary btn-sm mt-2" [routerLink]="['/committees', committee.id]">View Details</a>
+		</div>
+	</div>
+</section>

@@ -1,17 +1,29 @@
 package com.example.Controller;
 
-import com.example.Entity.Committee;
-import com.example.Response.ResponceBean;
-import com.example.Service.CommitteeService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Committee;
+import com.example.Response.ResponceBean;
+import com.example.Service.CommitteeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/committees")
@@ -20,6 +32,9 @@ public class CommitteeController {
     
     @Autowired
     private CommitteeService committeeService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all committees", description = "Retrieve all committees")
@@ -70,6 +85,24 @@ public class CommitteeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Committee not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch committee", description = "Partially update a committee")
+    public ResponseEntity<ResponceBean<Committee>> patchCommittee(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<Committee> existing = committeeService.getCommitteeById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Committee not found"));
+        }
+        try {
+            updates.remove("committeeId");
+            updates.remove("createdAt");
+            Committee patched = objectMapper.updateValue(existing.get(), updates);
+            Committee saved = committeeService.saveCommittee(patched);
+            return ResponseEntity.ok(ResponceBean.success("Committee patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

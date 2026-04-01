@@ -1,0 +1,23 @@
+<section>
+	<h2 class="mb-3">Users</h2>
+	<div class="table-responsive bg-white rounded-3 shadow-sm p-2">
+		<table class="table table-striped align-middle mb-0">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Role</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let user of users; index as i">
+					<td>{{ i + 1 }}</td>
+					<td>{{ user.name }}</td>
+					<td>{{ user.email || '-' }}</td>
+					<td>{{ user.role || '-' }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>

@@ -1,0 +1,47 @@
+<section class="row g-3">
+	<div class="col-md-3">
+		<app-sidebar></app-sidebar>
+	</div>
+	<div class="col-md-9">
+		<h2 class="mb-3">Dashboard Overview</h2>
+		<div class="row g-3">
+			<div class="col-md-6" *ngFor="let stat of stats">
+				<a class="text-decoration-none" [routerLink]="stat.route">
+					<app-reusable-card [title]="stat.title" [subtitle]="stat.value.toString()"></app-reusable-card>
+				</a>
+			</div>
+		</div>
+
+		<div class="row g-3 mt-1">
+			<div class="col-lg-8">
+				<div class="card shadow-sm chart-card">
+					<div class="card-body">
+						<h5 class="mb-3">Weekly Activity Snapshot</h5>
+						<div class="chart-row" *ngFor="let item of activity">
+							<div class="d-flex justify-content-between small mb-1">
+								<span>{{ item.label }}</span>
+								<span>{{ item.value }}</span>
+							</div>
+							<div class="chart-track">
+								<div class="chart-fill" [style.width.%]="getBarWidth(item.value)" [style.background]="item.color"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<div class="card shadow-sm h-100">
+					<div class="card-body">
+						<h5 class="mb-3">Today Timeline</h5>
+						<ul class="list-unstyled mb-0 small">
+							<li class="mb-2"><strong>09:30</strong> Faculty coordination meeting</li>
+							<li class="mb-2"><strong>11:00</strong> Event registration desk opens</li>
+							<li class="mb-2"><strong>14:00</strong> Task review with committee heads</li>
+							<li><strong>17:00</strong> Attendance sync with backend</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

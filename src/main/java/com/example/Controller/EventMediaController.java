@@ -1,17 +1,30 @@
 package com.example.Controller;
 
-import com.example.Entity.EventMedia;
-import com.example.Response.ResponceBean;
-import com.example.Service.EventMediaService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.EventMedia;
+import com.example.Response.ResponceBean;
+import com.example.Service.EventMediaService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/event-media")
@@ -20,6 +33,9 @@ public class EventMediaController {
     
     @Autowired
     private EventMediaService eventMediaService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping
     @Operation(summary = "Get all event media", description = "Retrieve all event media files")
@@ -83,6 +99,21 @@ public class EventMediaController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponceBean.success("Event media uploaded successfully", savedEventMedia));
     }
+
+    @PostMapping("/upload")
+    @Operation(summary = "Upload media file", description = "Upload media file and persist URL")
+    public ResponseEntity<ResponceBean<EventMedia>> uploadMediaFile(
+            @RequestParam Integer eventId,
+            @RequestParam EventMedia.MediaType mediaType,
+            @RequestParam("file") MultipartFile file) {
+        EventMedia uploaded = eventMediaService.uploadMedia(eventId, mediaType, file);
+        if (uploaded == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Unable to upload media. Check event and file payload."));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponceBean.success("Media file uploaded successfully", uploaded));
+    }
     
     @PutMapping("/{id}")
     @Operation(summary = "Update event media", description = "Update event media details")
@@ -93,6 +124,24 @@ public class EventMediaController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Event media not found"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch event media", description = "Partially update event media")
+    public ResponseEntity<ResponceBean<EventMedia>> patchEventMedia(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> updates) {
+        Optional<EventMedia> existing = eventMediaService.getEventMediaById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Event media not found"));
+        }
+        try {
+            updates.remove("mediaId");
+            updates.remove("uploadedAt");
+            EventMedia patched = objectMapper.updateValue(existing.get(), updates);
+            EventMedia saved = eventMediaService.saveEventMedia(patched);
+            return ResponseEntity.ok(ResponceBean.success("Event media patched successfully", saved));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
     }
     
     @DeleteMapping("/{id}")

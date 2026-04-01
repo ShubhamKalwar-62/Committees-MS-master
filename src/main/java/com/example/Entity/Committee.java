@@ -1,12 +1,23 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "committee")
@@ -24,6 +35,10 @@ public class Committee {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "login_id", nullable = false)
     private Login login;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "head_id")
+    private Users head;
     
     @Column(name = "faculty_incharge_name")
     private String facultyInchargeName;
@@ -48,9 +63,6 @@ public class Committee {
     
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Announcements> announcements;
-    
-    @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CommitteeChat> committeeChats;
     
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Events> events;
@@ -101,6 +113,14 @@ public class Committee {
     public void setFacultyInchargeName(String facultyInchargeName) {
         this.facultyInchargeName = facultyInchargeName;
     }
+
+    public Users getHead() {
+        return head;
+    }
+
+    public void setHead(Users head) {
+        this.head = head;
+    }
     
     public String getFacultyPosition() {
         return facultyPosition;
@@ -148,14 +168,6 @@ public class Committee {
     
     public void setAnnouncements(List<Announcements> announcements) {
         this.announcements = announcements;
-    }
-    
-    public List<CommitteeChat> getCommitteeChats() {
-        return committeeChats;
-    }
-    
-    public void setCommitteeChats(List<CommitteeChat> committeeChats) {
-        this.committeeChats = committeeChats;
     }
     
     public List<Events> getEvents() {

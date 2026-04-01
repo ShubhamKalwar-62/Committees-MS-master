@@ -1,0 +1,38 @@
+<section class="row justify-content-center">
+	<div class="col-md-6 col-lg-5">
+		<div class="card shadow-sm">
+			<div class="card-body p-4">
+				<h3 class="mb-3">Login</h3>
+				<p class="text-muted">Use your email and password to access the dashboard.</p>
+
+				<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+					<div class="mb-3">
+						<app-reusable-form-field
+							label="Email"
+							hint="example@college.edu"
+							[error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid ? 'Valid email is required' : ''">
+						</app-reusable-form-field>
+						<input type="email" class="form-control" formControlName="email" />
+					</div>
+
+					<div class="mb-3">
+						<app-reusable-form-field
+							label="Password"
+							hint="Minimum 6 characters"
+							[error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid ? 'Password is required' : ''">
+						</app-reusable-form-field>
+						<input type="password" class="form-control" formControlName="password" />
+					</div>
+
+					<p *ngIf="errorMessage" class="text-danger small">{{ errorMessage }}</p>
+					<app-reusable-button [type]="'submit'" [disabled]="loading" [label]="loading ? 'Signing in...' : 'Sign In'"></app-reusable-button>
+				</form>
+
+				<div class="mt-3 text-center">
+					<span class="text-muted">New here? </span>
+					<a routerLink="/auth/register">Create account</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

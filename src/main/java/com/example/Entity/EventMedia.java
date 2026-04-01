@@ -1,10 +1,22 @@
 package com.example.Entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "event_media")
@@ -20,15 +32,15 @@ public class EventMedia {
     private Events event;
     
     @NotBlank(message = "File name is required")
-    @Column(name = "file_name", nullable = false, length = 255)
+    @Column(name = "media_url", nullable = false, length = 500, insertable = false, updatable = false)
     private String fileName;
     
     @NotBlank(message = "File path is required")
-    @Column(name = "file_path", nullable = false, length = 500)
+    @Column(name = "media_url", nullable = false, length = 500)
     private String filePath;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "file_type", nullable = false, length = 20)
+    @Column(name = "media_type", nullable = false, length = 20)
     private MediaType fileType;
     
     @Column(name = "file_size")
@@ -37,6 +49,10 @@ public class EventMedia {
     @CreationTimestamp
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
     // Enum for Media Type
     public enum MediaType {
@@ -109,5 +125,13 @@ public class EventMedia {
     
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

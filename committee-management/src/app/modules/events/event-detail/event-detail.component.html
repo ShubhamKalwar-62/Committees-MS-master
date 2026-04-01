@@ -1,0 +1,12 @@
+<section *ngIf="event" class="card shadow-sm">
+	<div class="card-body">
+		<h3>{{ event.eventName }}</h3>
+		<p class="text-muted">{{ event.description || 'No description available.' }}</p>
+		<ul class="list-group list-group-flush">
+			<li class="list-group-item"><strong>Date:</strong> {{ event.eventDate }}</li>
+			<li class="list-group-item"><strong>Location:</strong> {{ event.location || '-' }}</li>
+			<li class="list-group-item"><strong>Status:</strong> {{ event.status || '-' }}</li>
+			<li class="list-group-item"><strong>Max Participants:</strong> {{ event.maxParticipants || '-' }}</li>
+		</ul>
+	</div>
+</section>

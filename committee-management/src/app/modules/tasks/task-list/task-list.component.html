@@ -1,0 +1,29 @@
+<section>
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Tasks</h2>
+		<a routerLink="/tasks/create" class="btn btn-primary">Create Task</a>
+	</div>
+
+	<div class="table-responsive bg-white rounded-3 shadow-sm p-2">
+		<table class="table table-hover align-middle mb-0">
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Status</th>
+					<th>Priority</th>
+					<th>Start</th>
+					<th>End</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let task of tasks">
+					<td>{{ task.title }}</td>
+					<td>{{ task.status || '-' }}</td>
+					<td>{{ task.priority || '-' }}</td>
+					<td>{{ task.startDate || '-' }}</td>
+					<td>{{ task.endDate || '-' }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>
