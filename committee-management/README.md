@@ -1,59 +1,74 @@
-# CommitteeManagement
+# Committee Management Frontend (Angular 19)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.23.
+Angular frontend for the Committees Management System.
 
-## Development server
+## Features
 
-To start a local development server, run:
+- Modular Angular architecture (no standalone)
+- Lazy-loaded feature modules
+- JWT authentication flow
+- Route guard for protected routes
+- HTTP interceptor for Authorization header
+- Dashboard with role-based navigation
+- Reactive forms with validation
 
-```bash
-ng serve
-```
+## Module Structure
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Core Module (eager):
+  - Header
+  - Footer
+  - Landing Page
 
-## Code scaffolding
+- Shared Module:
+  - Reusable button
+  - Reusable card
+  - Reusable form field
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- Feature Modules (lazy):
+  - Auth
+  - Dashboard
+  - Users
+  - Committees
+  - Events
+  - Tasks
+  - Attendance
+  - Announcements
 
-```bash
-ng generate component component-name
-```
+## Run Frontend
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+From this folder (committee-management):
 
 ```bash
-ng test
+npm install
+npx ng serve --port 4200
 ```
 
-## Running end-to-end tests
+Open: http://localhost:4200
 
-For end-to-end (e2e) testing, run:
+## Build Frontend
 
 ```bash
-ng e2e
+npx ng build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Backend API Requirement
 
-## Additional Resources
+Frontend expects backend at:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Base URL: http://localhost:8080/api
+
+Ensure backend is running and database schema is initialized.
+
+## Auth Notes
+
+- Login endpoint: /api/auth/login
+- Register endpoint: /api/auth/register
+- JWT token stored in localStorage
+- Role resolved from backend response or JWT claim
+
+## Demo Notes
+
+For presentation:
+- Run backend with seeded data (seed_demo_v2.sql)
+- Login as a seeded or newly registered user
+- Navigate through Dashboard, Events, Tasks, Attendance, Announcements
