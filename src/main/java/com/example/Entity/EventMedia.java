@@ -35,7 +35,6 @@ public class EventMedia {
     @JsonIgnoreProperties({"participants", "feedbacks", "mediaFiles", "createdAt", "updatedAt"})
     private Events event;
     
-    @NotBlank(message = "File name is required")
     @Column(name = "media_url", nullable = false, length = 500, insertable = false, updatable = false)
     private String fileName;
     

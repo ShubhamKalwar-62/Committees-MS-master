@@ -1,6 +1,7 @@
 package com.example.Controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Entity.Committee;
 import com.example.Entity.Roles;
+import com.example.Repository.CommitteeRepository;
 import com.example.Response.ResponceBean;
 import com.example.Service.RolesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +35,9 @@ public class RolesController {
     
     @Autowired
     private RolesService rolesService;
+
+    @Autowired
+    private CommitteeRepository committeeRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -70,7 +76,16 @@ public class RolesController {
     
     @PostMapping
     @Operation(summary = "Create new role", description = "Create a new role")
-    public ResponseEntity<ResponceBean<Roles>> createRole(@RequestBody Roles role) {
+    public ResponseEntity<ResponceBean<Roles>> createRole(@RequestBody Map<String, Object> payload) {
+        Roles role = new Roles();
+        role.setRoleName(payload.get("roleName") != null ? String.valueOf(payload.get("roleName")) : null);
+
+        Integer committeeId = extractCommitteeId(payload);
+        if (committeeId != null) {
+            Committee committee = committeeRepository.findById(committeeId).orElse(null);
+            role.setCommittee(committee);
+        }
+
         Roles savedRole = rolesService.saveRole(role);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponceBean.success("Role created successfully", savedRole));
@@ -78,8 +93,25 @@ public class RolesController {
     
     @PutMapping("/{id}")
     @Operation(summary = "Update role", description = "Update an existing role")
-    public ResponseEntity<ResponceBean<Roles>> updateRole(@PathVariable Integer id, @RequestBody Roles roleDetails) {
-        Roles updatedRole = rolesService.updateRole(id, roleDetails);
+    public ResponseEntity<ResponceBean<Roles>> updateRole(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
+        Optional<Roles> existing = rolesService.getRoleById(id);
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error("Role not found"));
+        }
+
+        Roles role = existing.get();
+        if (payload.get("roleName") != null) {
+            role.setRoleName(String.valueOf(payload.get("roleName")));
+        }
+
+        Integer committeeId = extractCommitteeId(payload);
+        if (committeeId != null) {
+            Committee committee = committeeRepository.findById(committeeId).orElse(null);
+            role.setCommittee(committee);
+        }
+
+        Roles updatedRole = rolesService.saveRole(role);
         if (updatedRole != null) {
             return ResponseEntity.ok(ResponceBean.success("Role updated successfully", updatedRole));
         }
@@ -97,7 +129,14 @@ public class RolesController {
         try {
             updates.remove("roleId");
             updates.remove("createdAt");
+            Integer committeeId = extractCommitteeId(updates);
+            updates.remove("committeeId");
+            updates.remove("committee");
             Roles patched = objectMapper.updateValue(existing.get(), updates);
+            if (committeeId != null) {
+                Committee committee = committeeRepository.findById(committeeId).orElse(null);
+                patched.setCommittee(committee);
+            }
             Roles saved = rolesService.saveRole(patched);
             return ResponseEntity.ok(ResponceBean.success("Role patched successfully", saved));
         } catch (Exception ex) {
@@ -115,5 +154,21 @@ public class RolesController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Role not found"));
+    }
+
+    private Integer extractCommitteeId(Map<String, Object> payload) {
+        Object committeeIdObj = payload.get("committeeId");
+        if (committeeIdObj != null) {
+            return Integer.valueOf(String.valueOf(committeeIdObj));
+        }
+
+        Object committeeObj = payload.get("committee");
+        if (committeeObj instanceof Map<?, ?> committeeMap) {
+            Object nestedId = committeeMap.get("committeeId");
+            if (nestedId != null) {
+                return Integer.valueOf(String.valueOf(nestedId));
+            }
+        }
+        return null;
     }
 }
