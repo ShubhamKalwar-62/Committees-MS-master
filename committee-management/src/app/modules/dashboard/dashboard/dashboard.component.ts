@@ -1,8 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import type { Chart, ChartConfiguration } from 'chart.js';
 import { AuthService } from '../../../services/auth.service';
-
-Chart.register(...registerables);
 
 type DashboardCard = {
   title: string;
@@ -32,6 +30,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   private eventsChartRef?: Chart;
   private attendanceChartRef?: Chart;
+  private chartCtor?: typeof import('chart.js').Chart;
   private chartRenderAttempts = 0;
   private readonly maxChartRenderAttempts = 10;
 
@@ -110,24 +109,34 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   private scheduleChartRender(): void {
     setTimeout(() => {
-      if (this.renderCharts()) {
-        return;
-      }
-
-      if (this.chartRenderAttempts < this.maxChartRenderAttempts) {
-        this.chartRenderAttempts += 1;
-        this.scheduleChartRender();
-      }
+      void this.tryRenderCharts();
     }, 0);
   }
 
-  private renderCharts(): boolean {
+  private async tryRenderCharts(): Promise<void> {
+    if (await this.renderCharts()) {
+      return;
+    }
+
+    if (this.chartRenderAttempts < this.maxChartRenderAttempts) {
+      this.chartRenderAttempts += 1;
+      this.scheduleChartRender();
+    }
+  }
+
+  private async renderCharts(): Promise<boolean> {
     if (!this.eventsTrendChart?.nativeElement || !this.attendanceChart?.nativeElement) {
+      return false;
+    }
+
+    if (!(await this.ensureChartsLoaded()) || !this.chartCtor) {
       return false;
     }
 
     this.eventsChartRef?.destroy();
     this.attendanceChartRef?.destroy();
+
+    const ChartCtor = this.chartCtor;
 
     const eventsConfig: ChartConfiguration<'line'> = {
       type: 'line',
@@ -196,8 +205,23 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       }
     };
 
-    this.eventsChartRef = new Chart(this.eventsTrendChart.nativeElement, eventsConfig);
-    this.attendanceChartRef = new Chart(this.attendanceChart.nativeElement, attendanceConfig);
+    this.eventsChartRef = new ChartCtor(this.eventsTrendChart.nativeElement, eventsConfig);
+    this.attendanceChartRef = new ChartCtor(this.attendanceChart.nativeElement, attendanceConfig);
     return true;
+  }
+
+  private async ensureChartsLoaded(): Promise<boolean> {
+    if (this.chartCtor) {
+      return true;
+    }
+
+    try {
+      const chartModule = await import('chart.js');
+      chartModule.Chart.register(...chartModule.registerables);
+      this.chartCtor = chartModule.Chart;
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
