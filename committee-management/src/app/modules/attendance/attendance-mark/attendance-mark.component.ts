@@ -14,6 +14,7 @@ export class AttendanceMarkComponent {
   private fb = inject(FormBuilder);
 
   saving = false;
+  errorMessage = '';
 
   attendanceForm = this.fb.group({
     userId: [1, Validators.required],
@@ -32,9 +33,16 @@ export class AttendanceMarkComponent {
     }
 
     this.saving = true;
-    this.attendanceService.markAttendance(this.attendanceForm.getRawValue() as Attendance).subscribe(() => {
-      this.saving = false;
-      this.router.navigate(['/attendance']);
+    this.errorMessage = '';
+    this.attendanceService.markAttendance(this.attendanceForm.getRawValue() as Attendance).subscribe({
+      next: () => {
+        this.saving = false;
+        this.router.navigate(['/attendance']);
+      },
+      error: (err) => {
+        this.saving = false;
+        this.errorMessage = err?.error?.message || 'Unable to mark attendance. Check User ID/Event ID values.';
+      }
     });
   }
 

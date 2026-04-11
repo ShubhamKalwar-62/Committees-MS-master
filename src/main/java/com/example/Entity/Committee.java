@@ -6,6 +6,9 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +24,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "committee")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Committee {
     
     @Id
@@ -34,10 +38,12 @@ public class Committee {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "login_id", nullable = false)
+    @JsonIgnoreProperties({"password", "user", "committees", "createdAt", "updatedAt"})
     private Login login;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "head_id")
+    @JsonIgnoreProperties({"announcements", "eventParticipations", "eventFeedbacks", "assignedTasks", "createdTasks", "attendanceRecords", "markedAttendanceRecords", "createdAt", "updatedAt"})
     private Users head;
     
     @Column(name = "faculty_incharge_name")
@@ -59,15 +65,19 @@ public class Committee {
     
     // Relationships
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Roles> roles;
     
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Announcements> announcements;
     
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Events> events;
     
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Task> tasks;
     
     // Constructors

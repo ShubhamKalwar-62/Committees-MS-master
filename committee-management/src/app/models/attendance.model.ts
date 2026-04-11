@@ -6,6 +6,6 @@ export interface Attendance {
   checkInTime?: string;
   checkOutTime?: string;
   attendanceMethod?: string;
-  markedBy?: string;
+  markedBy?: number;
   remarks?: string;
 }

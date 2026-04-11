@@ -6,6 +6,10 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,6 +28,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "login")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Login {
     
     @Id
@@ -38,6 +43,7 @@ public class Login {
     
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
     
@@ -46,6 +52,7 @@ public class Login {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
+    @JsonIgnoreProperties({"logins", "committee", "createdAt", "updatedAt"})
     private Roles roleRef;
     
     @CreationTimestamp
@@ -58,9 +65,11 @@ public class Login {
     
     // Relationships
     @OneToOne(mappedBy = "login", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Users user;
     
     @OneToMany(mappedBy = "login", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Committee> committees;
     
     // Constructors

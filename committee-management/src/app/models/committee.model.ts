@@ -4,4 +4,6 @@ export interface Committee {
   facultyInchargeName?: string;
   facultyPosition?: string;
   committeeInfo?: string;
+  loginId?: number;
+  headId?: number;
 }

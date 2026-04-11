@@ -7,5 +7,6 @@ export interface Task {
   startDate?: string;
   endDate?: string;
   committeeId?: number;
+  createdById?: number;
   assignedToId?: number;
 }

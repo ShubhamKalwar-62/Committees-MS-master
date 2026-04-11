@@ -14,6 +14,7 @@ export class AnnouncementCreateComponent {
   private fb = inject(FormBuilder);
 
   saving = false;
+  errorMessage = '';
 
   announcementForm = this.fb.group({
     message: ['', [Validators.required, Validators.minLength(5)]],
@@ -30,9 +31,16 @@ export class AnnouncementCreateComponent {
     }
 
     this.saving = true;
-    this.announcementService.createAnnouncement(this.announcementForm.getRawValue() as Announcement).subscribe(() => {
-      this.saving = false;
-      this.router.navigate(['/announcements']);
+    this.errorMessage = '';
+    this.announcementService.createAnnouncement(this.announcementForm.getRawValue() as Announcement).subscribe({
+      next: () => {
+        this.saving = false;
+        this.router.navigate(['/announcements']);
+      },
+      error: (err) => {
+        this.saving = false;
+        this.errorMessage = err?.error?.message || 'Unable to publish announcement. Check Committee ID/User ID values.';
+      }
     });
   }
 

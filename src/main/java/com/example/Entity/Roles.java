@@ -6,6 +6,9 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,6 +23,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "roles")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Roles {
     
     @Id
@@ -33,9 +37,11 @@ public class Roles {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "committee_id")
+    @JsonIgnoreProperties({"roles", "announcements", "events", "tasks", "login", "head", "createdAt", "updatedAt"})
     private Committee committee;
 
     @OneToMany(mappedBy = "roleRef", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Login> logins;
     
     @CreationTimestamp

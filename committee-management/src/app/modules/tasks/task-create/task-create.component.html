@@ -27,7 +27,33 @@
 					<label class="form-label">Description</label>
 					<textarea class="form-control" formControlName="description"></textarea>
 				</div>
+				<div class="col-md-4">
+					<label class="form-label">Committee</label>
+					<select class="form-select" formControlName="committeeId">
+						<option *ngFor="let committee of committees" [ngValue]="committee.id">
+							#{{ committee.id }} - {{ committee.committeeName }}
+						</option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label class="form-label">Created By</label>
+					<select class="form-select" formControlName="createdById">
+						<option *ngFor="let user of users" [ngValue]="user.id">
+							#{{ user.id }} - {{ user.name }}
+						</option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label class="form-label">Assign To (optional)</label>
+					<select class="form-select" formControlName="assignedToId">
+						<option [ngValue]="null">Unassigned</option>
+						<option *ngFor="let user of users" [ngValue]="user.id">
+							#{{ user.id }} - {{ user.name }}
+						</option>
+					</select>
+				</div>
 			</div>
+			<p *ngIf="errorMessage" class="text-danger mt-3 mb-0">{{ errorMessage }}</p>
 			<div class="mt-3">
 				<app-reusable-button [type]="'submit'" [disabled]="submitting" [label]="submitting ? 'Saving...' : 'Save Task'"></app-reusable-button>
 			</div>

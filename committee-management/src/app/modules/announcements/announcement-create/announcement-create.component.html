@@ -16,6 +16,7 @@
 					<input class="form-control" type="number" formControlName="userId" />
 				</div>
 			</div>
+			<p *ngIf="errorMessage" class="text-danger mt-3 mb-0">{{ errorMessage }}</p>
 			<div class="mt-3">
 				<app-reusable-button [type]="'submit'" [disabled]="saving" [label]="saving ? 'Saving...' : 'Publish Announcement'"></app-reusable-button>
 			</div>

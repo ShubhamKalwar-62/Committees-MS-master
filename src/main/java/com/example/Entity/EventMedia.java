@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,6 +22,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "event_media")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class EventMedia {
     
     @Id
@@ -29,6 +32,7 @@ public class EventMedia {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
+    @JsonIgnoreProperties({"participants", "feedbacks", "mediaFiles", "createdAt", "updatedAt"})
     private Events event;
     
     @NotBlank(message = "File name is required")
