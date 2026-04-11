@@ -1,6 +1,7 @@
 <div class="min-h-screen flex flex-col px-2 pt-24 md:px-4 md:pt-28">
   <app-header [appName]="appName"></app-header>
-  <main class="w-full max-w-[1320px] mx-auto flex-1 py-4">
+  <app-role-workspace *ngIf="showRoleWorkspace"></app-role-workspace>
+  <main class="w-full max-w-[1320px] mx-auto flex-1 py-4" [ngClass]="showRoleWorkspace ? 'lg:pl-[292px]' : ''">
     <router-outlet></router-outlet>
   </main>
   <app-footer [year]="currentYear"></app-footer>

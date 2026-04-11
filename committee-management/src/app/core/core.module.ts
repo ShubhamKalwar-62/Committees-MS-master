@@ -5,6 +5,7 @@ import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { LandingPageComponent } from './landing-page/landing-page.component';
 import { SharedModule } from '../shared/shared.module';
+import { RoleWorkspaceComponent } from './role-workspace/role-workspace.component';
 
 
 
@@ -12,7 +13,8 @@ import { SharedModule } from '../shared/shared.module';
   declarations: [
     HeaderComponent,
     FooterComponent,
-    LandingPageComponent
+    LandingPageComponent,
+    RoleWorkspaceComponent
   ],
   imports: [
     CommonModule,
@@ -22,7 +24,8 @@ import { SharedModule } from '../shared/shared.module';
   exports: [
     HeaderComponent,
     FooterComponent,
-    LandingPageComponent
+    LandingPageComponent,
+    RoleWorkspaceComponent
   ]
 })
 export class CoreModule { }

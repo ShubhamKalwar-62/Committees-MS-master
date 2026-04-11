@@ -1,10 +1,19 @@
 <nav class="fixed inset-x-0 top-0 z-50 px-2 pt-2 md:px-4 md:pt-4">
   <div class="mx-auto w-full rounded-xl bg-gradient-to-r from-slate-800 to-blue-700 px-4 py-3 text-white shadow-lg transition-all">
-    <div class="flex flex-wrap items-center gap-3">
-      <a class="text-lg font-semibold tracking-wide text-white no-underline hover:text-white" [routerLink]="homeRoute">{{ appName }}</a>
+    <div class="flex flex-wrap items-center gap-3 md:gap-4">
+      <a
+        class="brand-link no-underline"
+        [routerLink]="landingRoute"
+        title="Go to landing page"
+        (click)="closeMobileMenu()">
+        <span class="brand-mark">{{ brandShortName }}</span>
+        <span class="brand-name">{{ brandDisplayName }}</span>
+      </a>
 
-      <ul class="hidden md:flex items-center gap-2 lg:gap-4 text-sm font-medium text-slate-100">
-        <li *ngIf="isLoggedIn"><a class="text-white no-underline hover:text-white transition-all" [routerLink]="homeRoute">Dashboard</a></li>
+      <ul class="hidden md:flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-2 py-1">
+        <li *ngIf="isLoggedIn">
+          <a class="nav-pill" [routerLink]="homeRoute" routerLinkActive="nav-pill-active" [routerLinkActiveOptions]="{ exact: false }">Dashboard</a>
+        </li>
       </ul>
 
       <div class="ml-auto flex items-center gap-2">
@@ -17,16 +26,16 @@
           <span class="material-icons">{{ isMobileMenuOpen ? 'close' : 'menu' }}</span>
         </button>
 
-        <button *ngIf="isLoggedIn" type="button" title="Notifications" class="rounded-xl border border-white/30 bg-white/10 p-2 hover:bg-white/20 transition-all">
+        <button *ngIf="isLoggedIn" type="button" title="Notifications" class="action-icon" aria-label="Notifications">
           <span class="material-icons">notifications</span>
         </button>
 
-        <span *ngIf="isLoggedIn" class="rounded-xl bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800">{{ currentRole }}</span>
+        <span *ngIf="isLoggedIn" class="role-pill">{{ currentRole }}</span>
 
         <a *ngIf="!isLoggedIn" routerLink="/auth/login" class="rounded-xl border border-white/50 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/10 hover:text-white transition-all">Login</a>
         <a *ngIf="!isLoggedIn" routerLink="/auth/register" class="rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 no-underline hover:text-slate-800 hover:shadow-xl transition-all">Register</a>
 
-        <button *ngIf="isLoggedIn" (click)="logout()" class="rounded-xl bg-red-500 px-3 py-1.5 text-sm font-medium hover:bg-red-600 transition-all">Logout</button>
+        <button *ngIf="isLoggedIn" (click)="logout()" class="logout-btn">Logout</button>
       </div>
     </div>
 
@@ -35,7 +44,7 @@
         *ngFor="let item of mobileMenuItems"
         [routerLink]="item.route"
         (click)="closeMobileMenu()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-white no-underline hover:bg-white/10 hover:text-white transition-all">
+        class="top-link rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/10 transition-all">
         {{ item.label }}
       </a>
     </div>

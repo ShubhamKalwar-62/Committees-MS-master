@@ -17,6 +17,7 @@ type HeaderMenuItem = {
 export class HeaderComponent {
   @Input() appName = 'Committee Management';
   isMobileMenuOpen = false;
+  readonly landingRoute = '/';
 
   private readonly menuByRole: Record<string, HeaderMenuItem[]> = {
     ADMIN: [
@@ -58,6 +59,19 @@ export class HeaderComponent {
 
   get homeRoute(): string {
     return this.isLoggedIn ? this.authService.getRoleHomeRoute() : '/';
+  }
+
+  get brandShortName(): string {
+    const words = this.appName
+      .split(/\s+/)
+      .filter((word) => word !== '&')
+      .filter((word) => word.length > 0);
+
+    return words.slice(0, 4).map((word) => word[0].toUpperCase()).join('') || 'CEMS';
+  }
+
+  get brandDisplayName(): string {
+    return this.appName.replace('Committee & Event Management System', 'Committee & Event MS');
   }
 
   get mobileMenuItems(): HeaderMenuItem[] {

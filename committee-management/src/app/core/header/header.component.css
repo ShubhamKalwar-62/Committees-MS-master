@@ -1,1 +1,147 @@
+.brand-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.65rem;
+	text-decoration: none !important;
+	color: #ffffff !important;
+}
+
+.brand-link:hover {
+	text-decoration: none !important;
+	color: #ffffff !important;
+}
+
+.brand-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.1rem;
+	height: 2.1rem;
+	border-radius: 0.75rem;
+	background: rgba(255, 255, 255, 0.14);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.brand-name {
+	font-size: 1.2rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.top-link {
+	color: #ffffff !important;
+	text-decoration: none !important;
+}
+
+.top-link:hover {
+	color: #dbeafe !important;
+	text-decoration: none !important;
+}
+
+.nav-pill {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2rem;
+	padding: 0.35rem 0.8rem;
+	border-radius: 0.65rem;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: #ffffff !important;
+	text-decoration: none !important;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-pill:hover {
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff !important;
+}
+
+.nav-pill-active {
+	background: rgba(255, 255, 255, 0.2);
+	color: #ffffff !important;
+}
+
+.action-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.6rem;
+	height: 2.6rem;
+	border-radius: 0.8rem;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background: rgba(255, 255, 255, 0.12);
+	color: #ffffff;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.action-icon:hover {
+	background: rgba(255, 255, 255, 0.2);
+	transform: translateY(-1px);
+}
+
+.role-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2rem;
+	padding: 0.15rem 0.95rem;
+	border-radius: 999px;
+	font-size: 0.85rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	background: rgba(255, 255, 255, 0.87);
+	color: #1d4ed8;
+}
+
+.logout-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.6rem;
+	padding: 0.45rem 1rem;
+	border-radius: 0.8rem;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: linear-gradient(135deg, #ef4444, #dc2626);
+	color: #ffffff;
+	font-size: 0.95rem;
+	font-weight: 700;
+	transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.logout-btn:hover {
+	filter: brightness(1.06);
+	transform: translateY(-1px);
+}
+
+@media (max-width: 767.98px) {
+	.brand-name {
+		font-size: 0.96rem;
+		max-width: 11.5rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.brand-mark {
+		min-width: 1.85rem;
+		height: 1.85rem;
+		font-size: 0.66rem;
+	}
+
+	.role-pill {
+		font-size: 0.75rem;
+		padding: 0.15rem 0.7rem;
+	}
+
+	.logout-btn {
+		min-height: 2.35rem;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.88rem;
+	}
+}
 
