@@ -32,6 +32,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   private eventsChartRef?: Chart;
   private attendanceChartRef?: Chart;
+  private chartRenderAttempts = 0;
+  private readonly maxChartRenderAttempts = 10;
 
   private readonly configByRole: Record<string, DashboardConfig> = {
     ADMIN: {
@@ -97,7 +99,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.loading = false;
-      this.renderCharts();
+      this.scheduleChartRender();
     }, 350);
   }
 
@@ -106,9 +108,22 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     this.attendanceChartRef?.destroy();
   }
 
-  private renderCharts(): void {
+  private scheduleChartRender(): void {
+    setTimeout(() => {
+      if (this.renderCharts()) {
+        return;
+      }
+
+      if (this.chartRenderAttempts < this.maxChartRenderAttempts) {
+        this.chartRenderAttempts += 1;
+        this.scheduleChartRender();
+      }
+    }, 0);
+  }
+
+  private renderCharts(): boolean {
     if (!this.eventsTrendChart?.nativeElement || !this.attendanceChart?.nativeElement) {
-      return;
+      return false;
     }
 
     this.eventsChartRef?.destroy();
@@ -183,5 +198,6 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
     this.eventsChartRef = new Chart(this.eventsTrendChart.nativeElement, eventsConfig);
     this.attendanceChartRef = new Chart(this.attendanceChart.nativeElement, attendanceConfig);
+    return true;
   }
 }

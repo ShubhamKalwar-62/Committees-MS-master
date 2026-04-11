@@ -210,6 +210,23 @@ cd committee-management
 npx ng build
 ```
 
+## Final Demo Checklist
+
+1. Login with all three roles (ADMIN, FACULTY, STUDENT).
+2. Verify role-based routing:
+  - ADMIN: /admin/dashboard
+  - FACULTY: /faculty/dashboard
+  - STUDENT: /student/dashboard
+3. Run workflow once end-to-end:
+  - Create committee
+  - Create event
+  - Create/assign task
+  - Mark attendance
+  - Post announcement
+4. Open dashboard and confirm both charts are visible.
+5. Verify API docs at /swagger-ui/index.html.
+6. Run backend tests and frontend build before submission.
+
 ## Repository Notes
 
 - Backend and frontend are intentionally kept in one repository for easy academic demonstration.
