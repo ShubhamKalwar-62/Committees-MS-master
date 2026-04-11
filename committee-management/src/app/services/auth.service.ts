@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { ApiResponse, AuthRequest, AuthResponse, RegisterRequest } from '../models/auth.model';
+import { ApiResponse, AuthRequest, AuthResponse, RegisterRequest, TestEmailRequest, TestEmailResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root'
@@ -43,6 +43,10 @@ export class AuthService {
     return this.http.post<ApiResponse<{ email?: string; role?: string }>>(`${this.apiUrl}/register`, payload);
   }
 
+  sendTestEmail(payload: TestEmailRequest): Observable<ApiResponse<TestEmailResponse>> {
+    return this.http.post<ApiResponse<TestEmailResponse>>(`${this.apiUrl}/test-email`, payload);
+  }
+
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem(this.roleKey);
@@ -74,6 +78,34 @@ export class AuthService {
   hasAnyRole(roles: string[]): boolean {
     const currentRole = this.getCurrentRole();
     return roles.map((r) => r.toUpperCase()).includes(currentRole);
+  }
+
+  getRoleHomeRoute(): string {
+    const role = this.getCurrentRole();
+    if (role === 'ADMIN') {
+      return '/admin/dashboard';
+    }
+    if (role === 'FACULTY') {
+      return '/faculty/dashboard';
+    }
+    if (role === 'STUDENT') {
+      return '/student/dashboard';
+    }
+    return '/auth/login';
+  }
+
+  getRoleBaseRoute(): string {
+    const role = this.getCurrentRole();
+    if (role === 'ADMIN') {
+      return '/admin';
+    }
+    if (role === 'FACULTY') {
+      return '/faculty';
+    }
+    if (role === 'STUDENT') {
+      return '/student';
+    }
+    return '';
   }
 
   private extractRoleFromJwt(token: string): string {

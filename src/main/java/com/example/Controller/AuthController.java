@@ -3,6 +3,8 @@ package com.example.Controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,11 +25,14 @@ import com.example.Repository.RolesRepository;
 import com.example.Repository.UsersRepository;
 import com.example.Response.ResponceBean;
 import com.example.Security.JwtUtil;
+import com.example.Service.EmailService;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -46,6 +51,9 @@ public class AuthController {
 
     @Autowired
     private RolesRepository rolesRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/login")
     public ResponseEntity<ResponceBean<Map<String, Object>>> login(@RequestBody LoginRequest loginRequest) {
@@ -111,9 +119,25 @@ public class AuthController {
                 usersRepository.save(user);
             }
 
+            boolean mailSent = false;
+            String mailMessage = "Email skipped or not configured";
+
+            // Email is optional and should not block successful registration.
+            try {
+                mailSent = emailService.sendRegistrationSuccessEmail(registerRequest.getEmail(), registerRequest.getName());
+                if (mailSent) {
+                    mailMessage = "Registration email sent";
+                }
+            } catch (Exception mailEx) {
+                logger.warn("Registration succeeded but email failed for {}: {}", registerRequest.getEmail(), mailEx.getMessage());
+                mailMessage = "Registration completed, but email failed to send";
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("email", registerRequest.getEmail());
             response.put("role", login.getRole());
+            response.put("mailSent", mailSent);
+            response.put("mailMessage", mailMessage);
 
             return ResponseEntity.ok(new ResponceBean<>(true, "Registration successful", response));
 
@@ -147,6 +171,28 @@ public class AuthController {
             .body(new ResponceBean<>(false, "Invalid token"));
     }
 
+    @PostMapping("/test-email")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> sendTestEmail(@RequestBody TestEmailRequest testEmailRequest) {
+        if (testEmailRequest.getEmail() == null || testEmailRequest.getEmail().isBlank()) {
+            return ResponseEntity.badRequest()
+                .body(new ResponceBean<>(false, "Email is required"));
+        }
+
+        try {
+            boolean sent = emailService.sendRegistrationSuccessEmail(testEmailRequest.getEmail(), testEmailRequest.getName());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", testEmailRequest.getEmail());
+            response.put("mailSent", sent);
+            response.put("mailMessage", sent ? "Test email sent" : "Email skipped because app.mail.enabled=false");
+
+            return ResponseEntity.ok(new ResponceBean<>(true, "Test email processed", response));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ResponceBean<>(false, "Test email failed: " + e.getMessage()));
+        }
+    }
+
     // DTOs for request bodies
     public static class LoginRequest {
         private String email;
@@ -172,6 +218,16 @@ public class AuthController {
         public void setPassword(String password) { this.password = password; }
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+    }
+
+    public static class TestEmailRequest {
+        private String email;
+        private String name;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
     }

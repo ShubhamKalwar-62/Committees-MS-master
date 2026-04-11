@@ -1,0 +1,21 @@
+.section-table thead th {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-table td {
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.status-chip {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+}

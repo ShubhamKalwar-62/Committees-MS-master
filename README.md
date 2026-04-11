@@ -1,7 +1,7 @@
 # Committees Management System
 
 Full-stack Committee and Event Management platform with:
-- Spring Boot backend (Java 17, PostgreSQL, JWT auth, Swagger)
+- Spring Boot backend (Java 25, PostgreSQL, JWT auth, Swagger)
 - Angular frontend (Angular 19, modular architecture, lazy-loaded features)
 
 ## Current Status
@@ -16,7 +16,7 @@ This repository now contains:
 ## Tech Stack
 
 ### Backend
-- Java 17
+- Java 25
 - Spring Boot 3.5.3
 - Spring Security + JWT
 - Spring Data JPA + Hibernate
@@ -27,7 +27,7 @@ This repository now contains:
 ### Frontend
 - Angular 19 (modular, no standalone)
 - RxJS
-- Bootstrap (CSS)
+- Tailwind CSS
 - Reactive Forms
 
 ## Backend Setup
@@ -78,6 +78,51 @@ npx ng serve --port 4200
 
 Frontend URL:
 - App: http://localhost:4200
+
+## Connectivity + SMTP Email (Professor Requirement)
+
+This project now includes:
+1. Frontend-backend connectivity via Angular services targeting `http://localhost:8080/api/**`.
+2. Global backend CORS config for Angular origin (`http://localhost:4200`) in Spring Security.
+3. SMTP email integration for successful registration.
+
+### Enable SMTP Email Sending
+
+Set environment variables before starting backend (PowerShell):
+
+```powershell
+$env:APP_MAIL_ENABLED="true"
+$env:MAIL_HOST="smtp.gmail.com"
+$env:MAIL_PORT="587"
+$env:MAIL_USERNAME="yourgmail@gmail.com"
+$env:MAIL_PASSWORD="your_16_char_app_password"
+```
+
+Then start backend:
+
+```bash
+./mvnw.cmd spring-boot:run
+```
+
+### Test SMTP Quickly
+
+Use test endpoint:
+
+```http
+POST /api/auth/test-email
+```
+
+Sample body:
+
+```json
+{
+  "email": "student@example.com",
+  "name": "Demo User"
+}
+```
+
+Mail tools UI is also available for ADMIN users at:
+- `/admin/mail-tools`
 
 ## Authentication API
 

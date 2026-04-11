@@ -1,10 +1,20 @@
-<div class="list-group shadow-sm">
-	<div class="list-group-item bg-light fw-semibold">Role: {{ role }}</div>
-	<a routerLink="/dashboard" class="list-group-item list-group-item-action">Overview</a>
-	<a *ngIf="canAccessUsers()" routerLink="/users" class="list-group-item list-group-item-action">Users</a>
-	<a routerLink="/events" class="list-group-item list-group-item-action">Events</a>
-	<a *ngIf="canAccessCommittees()" routerLink="/committees" class="list-group-item list-group-item-action">Committees</a>
-	<a routerLink="/tasks" class="list-group-item list-group-item-action">Tasks</a>
-	<a routerLink="/attendance" class="list-group-item list-group-item-action">Attendance</a>
-	<a routerLink="/announcements" class="list-group-item list-group-item-action">Announcements</a>
-</div>
+<aside class="rounded-xl border border-slate-200 bg-white p-4 shadow-lg transition-all lg:fixed lg:top-24 lg:left-[max(0.75rem,calc((100vw-1320px)/2+0.75rem))] lg:w-[260px]">
+	<div class="mb-4">
+		<p class="text-xs uppercase tracking-[0.2em] text-slate-500">Role Workspace</p>
+		<h6 class="mt-1 text-base font-semibold text-slate-800">{{ role }}</h6>
+	</div>
+
+	<nav class="space-y-2">
+		<a
+			*ngFor="let item of menuItems"
+			[routerLink]="[roleBasePath, item.route]"
+			routerLinkActive="bg-blue-600 text-white shadow-lg"
+			[routerLinkActiveOptions]="{ exact: true }"
+			class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:shadow-xl transition-all">
+			<span class="material-icons">
+				{{ item.label.toLowerCase().includes('dashboard') ? 'dashboard' : item.label.toLowerCase().includes('event') ? 'event' : item.label.toLowerCase().includes('committee') || item.label.toLowerCase().includes('user') ? 'group' : item.label.toLowerCase().includes('task') ? 'task' : 'notifications' }}
+			</span>
+			<span>{{ item.label }}</span>
+		</a>
+	</nav>
+</aside>

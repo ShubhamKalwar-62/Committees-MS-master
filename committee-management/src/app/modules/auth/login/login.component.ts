@@ -33,7 +33,7 @@ export class LoginComponent {
     this.authService.login(this.loginForm.getRawValue() as { email: string; password: string }).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/dashboard']);
+        this.router.navigateByUrl(this.authService.getRoleHomeRoute());
       },
       error: (err) => {
         this.loading = false;

@@ -1,15 +1,110 @@
-<section class="hero p-5 rounded-4 bg-light border">
-	<h1 class="display-6 fw-bold mb-3">Committee & Event Management System</h1>
-	<p class="lead text-muted mb-4">
-		A complete platform for authentication, committee collaboration, event execution, attendance marking, and task tracking.
-	</p>
-	<div class="row g-3 mb-4">
-		<div class="col-md-4" *ngFor="let item of highlights">
-			<app-reusable-card [title]="item" subtitle="Built for student teams and faculty coordinators"></app-reusable-card>
-		</div>
-	</div>
-	<div class="d-flex gap-2">
-		<a routerLink="/auth/login" class="btn btn-primary">Login</a>
-		<a routerLink="/auth/register" class="btn btn-outline-primary">Create Account</a>
-	</div>
+<section class="space-y-6">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-lg hover:shadow-xl transition-all">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+      <div class="lg:col-span-7">
+        <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-blue-700">Campus Operations Platform</p>
+        <h1 class="mb-3 text-3xl md:text-5xl font-bold leading-tight text-slate-900">Committee & Event Management System</h1>
+        <p class="mb-4 max-w-2xl text-sm md:text-base text-slate-600">
+          A modern role-based command center for Admins, Faculty and Students to govern committees, run events, and track academic accountability in one secure workspace.
+        </p>
+
+        <div class="mb-5 flex flex-wrap gap-2">
+          <span *ngFor="let badge of badges" class="rounded-xl border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{{ badge }}</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <a routerLink="/auth/login" class="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all">Login</a>
+          <a routerLink="/auth/register" class="rounded-xl border border-blue-200 px-5 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 hover:shadow-xl transition-all">Register</a>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="rounded-xl bg-gradient-to-br from-slate-800 to-blue-700 p-4 md:p-5 text-slate-100 shadow-lg">
+          <div class="mb-3 flex items-center justify-between">
+            <h6 class="text-sm font-semibold">Dashboard Preview</h6>
+            <span class="rounded-xl border border-emerald-300/40 bg-emerald-400/20 px-2 py-0.5 text-xs font-semibold text-emerald-100">Live</span>
+          </div>
+
+          <div class="mb-3 grid grid-cols-2 gap-2">
+            <div *ngFor="let stat of stats" class="rounded-xl border border-white/20 bg-white/10 p-2.5">
+              <div class="text-lg font-bold leading-none">{{ stat.value }}</div>
+              <div class="mt-1 text-[11px] text-blue-100">{{ stat.label }}</div>
+              <div class="text-[10px] text-blue-200">{{ stat.trend }}</div>
+            </div>
+          </div>
+
+          <div class="space-y-2 border-t border-white/20 pt-2">
+            <div *ngFor="let milestone of milestones" class="flex gap-2 text-xs">
+              <span class="min-w-11 font-semibold text-emerald-100">{{ milestone.time }}</span>
+              <span class="text-slate-200">{{ milestone.item }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <article *ngFor="let feature of features" class="rounded-xl border border-slate-200 bg-white p-5 shadow-lg hover:shadow-xl transition-all">
+      <div class="mb-3 inline-flex rounded-xl bg-blue-50 p-2 text-blue-700">
+        <span class="material-icons">{{ feature.icon }}</span>
+      </div>
+      <h5 class="mb-2 text-lg font-semibold text-slate-800">{{ feature.title }}</h5>
+      <p class="text-sm text-slate-500">{{ feature.text }}</p>
+    </article>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-white p-5 md:p-7 shadow-lg hover:shadow-xl transition-all">
+    <div class="mb-5">
+      <h3 class="text-2xl font-bold text-slate-900">Role-Based Interfaces</h3>
+      <p class="text-sm text-slate-500">Purpose-built dashboards for Admin, Faculty, and Student users.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <article *ngFor="let panel of rolePanels" class="rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all hover:shadow-xl">
+        <div class="mb-3 inline-flex rounded-xl bg-blue-100 p-2 text-blue-700">
+          <span class="material-icons">{{ panel.icon }}</span>
+        </div>
+        <h4 class="mb-2 text-lg font-semibold text-slate-800">{{ panel.role }}</h4>
+        <p class="text-sm text-slate-600">{{ panel.summary }}</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="rounded-xl border border-slate-200 bg-white p-5 md:p-7 shadow-lg hover:shadow-xl transition-all">
+      <div class="mb-4">
+        <h3 class="text-2xl font-bold text-slate-900">Operational Workflow</h3>
+        <p class="text-sm text-slate-500">A complete cycle from planning to final reporting.</p>
+      </div>
+
+      <div class="space-y-4">
+        <article *ngFor="let step of workflowSteps" class="flex items-start gap-3 border-b border-slate-100 pb-3 last:border-b-0">
+          <div class="rounded-xl bg-blue-600 px-2.5 py-1 text-xs font-bold text-white">{{ step.step }}</div>
+          <div>
+            <h4 class="text-base font-semibold text-slate-800">{{ step.title }}</h4>
+            <p class="text-sm text-slate-600">{{ step.text }}</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-slate-200 bg-white p-5 md:p-7 shadow-lg hover:shadow-xl transition-all">
+      <div class="mb-4">
+        <h3 class="text-2xl font-bold text-slate-900">Platform Modules</h3>
+        <p class="text-sm text-slate-500">Everything needed for a complete demo and viva presentation.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <article *ngFor="let module of moduleHighlights" class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-700">
+          {{ module }}
+        </article>
+      </div>
+
+      <div class="mt-5 rounded-xl bg-gradient-to-r from-blue-700 to-slate-800 p-4 text-white">
+        <p class="text-xs uppercase tracking-[0.2em] text-blue-100">Ready for Presentation</p>
+        <p class="mt-2 text-sm text-slate-100">Use role-specific dashboards, charts, and timeline blocks to demonstrate a real production-style SaaS workflow.</p>
+      </div>
+    </section>
+  </div>
 </section>

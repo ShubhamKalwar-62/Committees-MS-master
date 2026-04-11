@@ -24,3 +24,14 @@ export interface AuthResponse {
   role?: string;
   message?: string;
 }
+
+export interface TestEmailRequest {
+  email: string;
+  name?: string;
+}
+
+export interface TestEmailResponse {
+  email: string;
+  mailSent: boolean;
+  mailMessage: string;
+}

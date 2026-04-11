@@ -22,16 +22,8 @@ export class HeaderComponent {
     return this.authService.getCurrentRole() || 'GUEST';
   }
 
-  canAccessUsers(): boolean {
-    return this.authService.hasAnyRole(['ADMIN']);
-  }
-
-  canAccessCommittees(): boolean {
-    return this.authService.hasAnyRole(['ADMIN', 'FACULTY']);
-  }
-
-  canManageTasks(): boolean {
-    return this.authService.hasAnyRole(['ADMIN', 'FACULTY', 'STUDENT']);
+  get homeRoute(): string {
+    return this.isLoggedIn ? this.authService.getRoleHomeRoute() : '/';
   }
 
   logout(): void {

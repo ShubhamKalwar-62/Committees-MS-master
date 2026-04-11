@@ -1,25 +1,25 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 rounded-3">
-	<a class="navbar-brand fw-bold" routerLink="/">{{ appName }}</a>
-	<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-		<span class="navbar-toggler-icon"></span>
-	</button>
+<nav class="mb-4 rounded-xl bg-gradient-to-r from-slate-800 to-blue-700 px-4 py-3 text-white shadow-lg transition-all">
+  <div class="flex flex-wrap items-center gap-3">
+    <a class="text-lg font-semibold tracking-wide" [routerLink]="homeRoute">{{ appName }}</a>
 
-	<div class="collapse navbar-collapse" id="mainNav">
-		<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-			<li class="nav-item" *ngIf="isLoggedIn"><a class="nav-link" routerLink="/dashboard">Dashboard</a></li>
-			<li class="nav-item" *ngIf="isLoggedIn"><a class="nav-link" routerLink="/events">Events</a></li>
-			<li class="nav-item" *ngIf="canAccessCommittees()"><a class="nav-link" routerLink="/committees">Committees</a></li>
-			<li class="nav-item" *ngIf="canManageTasks()"><a class="nav-link" routerLink="/tasks">Tasks</a></li>
-			<li class="nav-item" *ngIf="isLoggedIn"><a class="nav-link" routerLink="/attendance">Attendance</a></li>
-			<li class="nav-item" *ngIf="isLoggedIn"><a class="nav-link" routerLink="/announcements">Announcements</a></li>
-			<li class="nav-item" *ngIf="canAccessUsers()"><a class="nav-link" routerLink="/users">Users</a></li>
-		</ul>
+    <ul class="hidden md:flex items-center gap-2 lg:gap-4 text-sm font-medium text-slate-100">
+      <li *ngIf="isLoggedIn"><a class="hover:text-white transition-all" [routerLink]="homeRoute">Dashboard</a></li>
+      <li *ngIf="isLoggedIn"><a class="hover:text-white transition-all" routerLink="/events">Events</a></li>
+      <li *ngIf="isLoggedIn"><a class="hover:text-white transition-all" routerLink="/tasks">Tasks</a></li>
+      <li *ngIf="isLoggedIn"><a class="hover:text-white transition-all" routerLink="/attendance">Attendance</a></li>
+    </ul>
 
-		<div class="d-flex gap-2">
-			<span *ngIf="isLoggedIn" class="badge text-bg-info align-self-center">{{ currentRole }}</span>
-			<a *ngIf="!isLoggedIn" class="btn btn-outline-light btn-sm" routerLink="/auth/login">Login</a>
-			<a *ngIf="!isLoggedIn" class="btn btn-warning btn-sm" routerLink="/auth/register">Register</a>
-			<button *ngIf="isLoggedIn" class="btn btn-danger btn-sm" (click)="logout()">Logout</button>
-		</div>
-	</div>
+    <div class="ml-auto flex items-center gap-2">
+      <button *ngIf="isLoggedIn" type="button" title="Notifications" class="rounded-xl border border-white/30 bg-white/10 p-2 hover:bg-white/20 transition-all">
+        <span class="material-icons">notifications</span>
+      </button>
+
+      <span *ngIf="isLoggedIn" class="rounded-xl bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800">{{ currentRole }}</span>
+
+      <a *ngIf="!isLoggedIn" routerLink="/auth/login" class="rounded-xl border border-white/50 px-3 py-1.5 text-sm hover:bg-white/10 transition-all">Login</a>
+      <a *ngIf="!isLoggedIn" routerLink="/auth/register" class="rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:shadow-xl transition-all">Register</a>
+
+      <button *ngIf="isLoggedIn" (click)="logout()" class="rounded-xl bg-red-500 px-3 py-1.5 text-sm font-medium hover:bg-red-600 transition-all">Logout</button>
+    </div>
+  </div>
 </nav>
