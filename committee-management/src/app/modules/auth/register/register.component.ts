@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-register',
@@ -23,7 +24,11 @@ export class RegisterComponent {
     role: ['STUDENT', [Validators.required]]
   });
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private notificationService: NotificationService,
+    private router: Router
+  ) {}
 
   onSubmit(): void {
     if (this.registerForm.invalid) {
@@ -32,6 +37,27 @@ export class RegisterComponent {
     }
 
     this.submitting = true;
+    const payload = this.registerForm.getRawValue() as {
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    };
+
+    const normalizedRole = (payload.role || '').toUpperCase();
+    if (normalizedRole !== 'FACULTY' && normalizedRole !== 'STUDENT') {
+      this.submitting = false;
+      this.message = 'Only FACULTY and STUDENT registrations are allowed.';
+      this.helpText = '';
+      this.notificationService.add({
+        title: 'Registration Blocked',
+        message: this.message,
+        level: 'warning',
+        actionRoute: '/auth/register'
+      });
+      return;
+    }
+
     this.authService.register(this.registerForm.getRawValue() as {
       name: string;
       email: string;
@@ -42,6 +68,12 @@ export class RegisterComponent {
         this.submitting = false;
         this.message = 'Registration successful. Please login.';
         this.helpText = '';
+        this.notificationService.add({
+          title: 'Registration Successful',
+          message: this.message,
+          level: 'success',
+          actionRoute: '/auth/login'
+        });
         setTimeout(() => this.router.navigate(['/auth/login']), 800);
       },
       error: (err) => {
@@ -51,6 +83,12 @@ export class RegisterComponent {
         const handled = this.mapFriendlyError(errorMessage);
         this.message = handled.message;
         this.helpText = handled.helpText;
+        this.notificationService.add({
+          title: 'Registration Failed',
+          message: this.message,
+          level: 'error',
+          actionRoute: '/auth/register'
+        });
       }
     });
   }

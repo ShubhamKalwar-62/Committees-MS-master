@@ -1,12 +1,61 @@
-<section>
-	<div class="d-flex justify-content-between align-items-center mb-3">
-		<h2 class="mb-0">Announcements</h2>
-		<a routerLink="/announcements/create" class="btn btn-primary">Create Announcement</a>
+<section class="w-full space-y-5">
+	<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<h2 class="page-header-title">Announcements</h2>
+				<p class="page-header-subtitle">Stay updated with institutional updates and committee notices.</p>
+			</div>
+
+			<div class="flex flex-wrap items-center gap-2">
+				<span class="inline-flex items-center rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+					Notice Stream
+				</span>
+				<a
+					*ngIf="canCreateAnnouncement"
+					routerLink="/announcements/create"
+					class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:text-white"
+				>
+					Create Announcement
+				</a>
+			</div>
+		</div>
 	</div>
 
-	<div class="row g-3">
-		<div class="col-md-6" *ngFor="let announcement of announcements">
-			<app-reusable-card [title]="announcement.message" [subtitle]="announcement.createdAt || 'Recent update'"></app-reusable-card>
+	<article class="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 p-5 text-white shadow-lg">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<p class="mb-1 text-xs font-semibold uppercase tracking-[0.13em] text-indigo-100">Broadcast Hub</p>
+				<h3 class="mb-0 text-xl font-bold">Official Communication Feed</h3>
+			</div>
+			<span class="inline-flex items-center rounded-xl border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-indigo-50">
+				{{ announcements.length }} Posts
+			</span>
+		</div>
+
+		<p class="mb-0 mt-4 text-sm text-indigo-50">
+			Receive the latest updates from committees and administration in one place.
+		</p>
+	</article>
+
+	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+		<article
+			*ngFor="let announcement of announcements"
+			class="announcement-card group rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition-all"
+		>
+			<div class="mb-3 flex items-center justify-between gap-2">
+				<p class="mb-0 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
+					Notice
+				</p>
+				<span class="material-icons text-[18px] text-slate-300 transition-colors group-hover:text-blue-500">campaign</span>
+			</div>
+
+			<h3 class="mb-2 text-base font-semibold text-slate-800">{{ getAnnouncementTitle(announcement.message) }}</h3>
+			<p class="mb-4 text-sm leading-relaxed text-slate-600">{{ getAnnouncementPreview(announcement.message) }}</p>
+			<p class="mb-0 inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">{{ formatDate(announcement.createdAt) }}</p>
+		</article>
+
+		<div *ngIf="!announcements.length" class="col-span-full rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm">
+			No announcements available at the moment.
 		</div>
 	</div>
 </section>

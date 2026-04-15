@@ -1,5 +1,5 @@
-<div class="d-flex justify-content-between mb-1">
-	<label class="form-label mb-0 fw-semibold">{{ label }}</label>
-	<small class="text-muted">{{ hint }}</small>
+<div class="mb-1 flex items-center justify-between gap-2">
+	<label class="mb-0 text-sm font-semibold text-slate-700">{{ label }}</label>
+	<small class="text-xs text-slate-500">{{ hint }}</small>
 </div>
-<small *ngIf="error" class="text-danger d-block mt-1">{{ error }}</small>
+<small *ngIf="error" class="mt-1 block text-xs text-rose-600">{{ error }}</small>

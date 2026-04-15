@@ -1,0 +1,203 @@
+<section class="student-profile-shell w-full min-h-screen bg-[#f2f4f8] text-slate-800">
+  <div class="w-full rounded-[26px] border border-[#e6ebf3] bg-[#f5f7fc] p-3.5 shadow-[0_12px_28px_rgba(15,23,42,0.05)] sm:p-6 lg:p-7">
+    <p class="mb-1 text-[11px] font-semibold uppercase tracking-[0.19em] text-slate-400">
+      CommitteeOS
+      <span class="mx-1.5 text-slate-300">&gt;</span>
+      <span class="text-[#143f8d]">Profile &amp; Workspace</span>
+    </p>
+    <h1 class="mb-1 text-[2rem] font-extrabold leading-[1.14] tracking-[-0.015em] text-[#123f8b] sm:text-[42px]">Student Profile</h1>
+    <p class="mb-0 text-[0.95rem] leading-relaxed text-slate-600 sm:text-[1.14rem]">Manage your personal information and institutional responsibilities.</p>
+
+    <div class="mt-7 grid grid-cols-12 gap-5 lg:gap-6">
+      <div class="col-span-12 space-y-4 xl:col-span-4">
+        <article class="premium-surface profile-reveal profile-reveal-1 rounded-[24px] border border-[#e7ebf4] bg-white p-4 sm:p-5 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+          <div class="profile-avatar-shell profile-avatar-core relative flex items-center justify-center overflow-hidden rounded-full bg-[#133f92] text-[48px] font-bold text-white shadow-[0_10px_25px_rgba(19,63,146,0.28)]">
+            <img *ngIf="avatarDataUrl" [src]="avatarDataUrl" alt="Student photo" class="h-full w-full object-cover" />
+            <span *ngIf="!avatarDataUrl">{{ profileInitial }}</span>
+            <button type="button" class="absolute bottom-2 right-1 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#1d4ea2] shadow-md transition-transform hover:scale-105">
+              <span class="material-icons text-[16px]">edit</span>
+            </button>
+          </div>
+
+          <h2 class="mb-0 mt-5 text-center text-[30px] font-semibold leading-none text-[#153f8f] sm:text-[34px]">{{ displayName }}</h2>
+          <p class="mb-0 mt-2 text-center text-sm text-slate-500">{{ profile.email || 'suraj123@gmail.com' }}</p>
+
+          <div class="mt-5 space-y-2">
+            <label class="action-button-primary">
+              <span class="material-icons text-[14px]">upload</span>
+              <span>Change Photo</span>
+              <input type="file" accept="image/*" class="hidden" (change)="onPhotoSelected($event)" />
+            </label>
+            <button
+              type="button"
+              class="action-button-muted"
+              (click)="removePhoto()"
+              [disabled]="!avatarDataUrl"
+            >
+              Remove Avatar
+            </button>
+          </div>
+
+          <p
+            *ngIf="profileMessage"
+            class="mb-0 mt-3 text-center text-xs"
+            [ngClass]="profileMessageIsError ? 'text-rose-600' : 'text-emerald-600'"
+          >
+            {{ profileMessage }}
+          </p>
+        </article>
+
+        <article #committeesSection id="student-committees-section" class="premium-surface profile-reveal profile-reveal-2 rounded-[22px] border border-[#e7ebf4] bg-white p-3.5 sm:p-4 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+          <div class="flex items-center justify-between">
+            <h3 class="mb-0 text-2xl font-bold text-[#17418c] sm:text-[26px]">Committees</h3>
+            <span class="rounded-md bg-[#dbe7fb] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#2f61b3]">Active</span>
+          </div>
+
+          <div class="mt-3.5 space-y-2.5">
+            <div *ngFor="let committee of committees" class="committee-item flex items-center gap-3 rounded-2xl bg-[#f7f9fd] p-2.5 transition-transform hover:-translate-y-0.5">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl" [ngClass]="getCommitteeToneClasses(committee.tone)">
+                <span class="material-icons text-[19px]">{{ committee.icon }}</span>
+              </div>
+
+              <div>
+                <p class="mb-0 text-[13px] font-semibold text-[#1f3e75]">{{ committee.name }}</p>
+                <p class="mb-0 text-[11px] text-slate-500">{{ committee.role }}</p>
+              </div>
+            </div>
+
+            <p *ngIf="!committees.length" class="mb-0 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+              You are not assigned to any committee yet.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-span-12 xl:col-span-8">
+        <h3 class="mb-3 flex items-center gap-2 text-2xl font-bold text-[#123f8b] sm:text-[31px]">
+          <span class="material-icons text-[20px] text-[#2f61b3]">hub</span>
+          {{ workspaceTitle }}
+        </h3>
+
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <a
+            *ngFor="let item of quickLinks"
+            [routerLink]="item.route"
+            class="workspace-card profile-reveal profile-reveal-2 flex h-full flex-col rounded-[20px] border p-4"
+            [ngClass]="getToneClasses(item.tone)"
+          >
+            <div class="flex h-10 w-10 items-center justify-center rounded-full" [ngClass]="getIconToneClasses(item.tone)">
+              <span class="material-icons text-[18px]">{{ item.icon }}</span>
+            </div>
+
+            <h4 class="mb-0 mt-4 break-words text-2xl font-bold leading-tight text-[#143f8d] sm:text-[29px]">{{ item.label }}</h4>
+            <p class="mb-0 mt-1.5 text-[13px] leading-relaxed text-slate-500">{{ item.description }}</p>
+
+            <span class="mt-auto inline-flex items-center gap-1.5 pt-4 text-[11px] font-bold tracking-[0.12em]" [ngClass]="item.tone === 'rose' ? 'text-[#bd3441]' : 'text-[#19458f]'">
+              {{ item.actionLabel }}
+              <span class="material-icons text-[16px]">arrow_forward</span>
+            </span>
+          </a>
+        </div>
+
+        <article class="premium-surface profile-reveal profile-reveal-3 mt-4 rounded-[22px] border border-[#e7ebf4] bg-white p-4 sm:p-5 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+          <div class="flex items-start gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#e7edfa] text-[#2f61b3]">
+              <span class="material-icons text-[18px]">shield</span>
+            </span>
+
+            <div>
+              <h3 class="mb-0 text-2xl font-bold text-[#123f8b] sm:text-[31px]">Security Settings</h3>
+              <p class="mb-0 text-sm text-slate-500">Keep your academic portal secure by updating your password regularly.</p>
+            </div>
+          </div>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="mt-4">
+            <input type="hidden" formControlName="currentPassword" />
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#264f97]">New Password</label>
+                <div class="relative mt-1.5">
+                  <input
+                    [type]="showNewPassword ? 'text' : 'password'"
+                    formControlName="newPassword"
+                    placeholder="Min. 8 characters"
+                    class="h-11 w-full rounded-xl border border-[#e3e8f2] bg-[#f7f8fc] px-3 pr-11 text-sm text-slate-700 outline-none transition-all focus:border-[#b6c9ea] focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                    (click)="showNewPassword = !showNewPassword"
+                    [attr.aria-label]="showNewPassword ? 'Hide password' : 'Show password'"
+                  >
+                    <span class="material-icons text-[18px]">{{ showNewPassword ? 'visibility_off' : 'visibility' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#264f97]">Confirm New Password</label>
+                <div class="relative mt-1.5">
+                  <input
+                    [type]="showConfirmPassword ? 'text' : 'password'"
+                    formControlName="confirmPassword"
+                    placeholder="Repeat password"
+                    class="h-11 w-full rounded-xl border border-[#e3e8f2] bg-[#f7f8fc] px-3 pr-11 text-sm text-slate-700 outline-none transition-all focus:border-[#b6c9ea] focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                    (click)="showConfirmPassword = !showConfirmPassword"
+                    [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'"
+                  >
+                    <span class="material-icons text-[18px]">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <p *ngIf="passwordMinLengthInvalid" class="mb-0 mt-2 text-xs text-rose-600">Password must be at least 8 characters.</p>
+            <p *ngIf="passwordError" class="mb-0 mt-2 text-xs text-rose-600">{{ passwordError }}</p>
+            <p *ngIf="passwordMessage" class="mb-0 mt-2 text-xs text-emerald-600">{{ passwordMessage }}</p>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p class="mb-0 text-xs text-slate-500">Last changed 4 months ago</p>
+              <button
+                type="submit"
+                [disabled]="savingPassword"
+                class="rounded-full bg-[#133f92] px-7 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(19,63,146,0.26)] transition-all hover:-translate-y-0.5 hover:bg-[#174aa8] disabled:cursor-not-allowed disabled:opacity-65"
+              >
+                {{ savingPassword ? 'Updating...' : 'Update Password' }}
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <article class="stats-gradient profile-reveal profile-reveal-4 relative mt-4 overflow-hidden rounded-[22px] px-4 py-5 sm:px-5 sm:py-6 text-white shadow-[0_16px_30px_rgba(15,49,116,0.32)]">
+          <div class="relative z-10 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div class="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-50">
+                {{ statsLoading ? 'Syncing Data' : 'Live Snapshot' }}
+              </div>
+              <h3 class="mb-1 mt-2 text-2xl font-bold sm:text-[31px]">Academic Year {{ academicYearLabel }}</h3>
+              <p class="mb-0 text-sm text-blue-100">{{ participationSummary }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-5 sm:gap-8">
+              <div>
+                <p class="mb-0 text-4xl font-extrabold leading-none sm:text-[47px]">{{ attendanceRate }}</p>
+                <p class="mb-0 mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-100">Attendance</p>
+              </div>
+              <div>
+                <p class="mb-0 text-4xl font-extrabold leading-none sm:text-[47px]">{{ formattedOpenTasksCount }}</p>
+                <p class="mb-0 mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-100">Open Tasks</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <p *ngIf="loadingProfile" class="mb-0 mt-3 text-xs text-slate-500">Loading profile...</p>
+  </div>
+</section>

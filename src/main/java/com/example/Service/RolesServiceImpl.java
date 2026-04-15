@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class RolesServiceImpl implements RolesService {
 
     @Override
     public Optional<Roles> getRoleById(Integer id) {
-        return rolesRepository.findById(id);
+        return rolesRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -44,17 +45,17 @@ public class RolesServiceImpl implements RolesService {
 
     @Override
     public Roles saveRole(Roles role) {
-        return rolesRepository.save(role);
+        return rolesRepository.save(Objects.requireNonNull(role, "role must not be null"));
     }
 
     @Override
     public void deleteRole(Integer id) {
-        rolesRepository.deleteById(id);
+        rolesRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Roles updateRole(Integer id, Roles roleDetails) {
-        Optional<Roles> existingRole = rolesRepository.findById(id);
+        Optional<Roles> existingRole = rolesRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingRole.isPresent()) {
             Roles role = existingRole.get();
             role.setRoleName(roleDetails.getRoleName());

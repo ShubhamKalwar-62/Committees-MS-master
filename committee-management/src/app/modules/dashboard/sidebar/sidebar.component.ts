@@ -18,11 +18,8 @@ export class SidebarComponent {
     ADMIN: [
       { label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
       { label: 'Users', icon: 'group', route: '/users' },
-      { label: 'Events', icon: 'event', route: '/events' },
+      { label: 'Events & Attendance', icon: 'event', route: '/events' },
       { label: 'Committees', icon: 'apartment', route: '/committees' },
-      { label: 'Tasks', icon: 'task_alt', route: '/tasks' },
-      { label: 'Attendance', icon: 'fact_check', route: '/attendance' },
-      { label: 'Announcements', icon: 'campaign', route: '/announcements' },
       { label: 'Mail Tools', icon: 'mail', route: '/admin/mail-tools' }
     ],
     FACULTY: [

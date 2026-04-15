@@ -1,10 +1,12 @@
 package com.example.Service;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,7 +40,7 @@ public class EventMediaServiceImpl implements EventMediaService {
 
     @Override
     public Optional<EventMedia> getEventMediaById(Integer id) {
-        return eventMediaRepository.findById(id);
+        return eventMediaRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -73,12 +75,12 @@ public class EventMediaServiceImpl implements EventMediaService {
 
     @Override
     public EventMedia saveEventMedia(EventMedia eventMedia) {
-        return eventMediaRepository.save(eventMedia);
+        return eventMediaRepository.save(Objects.requireNonNull(eventMedia, "event media must not be null"));
     }
 
     @Override
     public EventMedia uploadMedia(Integer eventId, EventMedia.MediaType mediaType, MultipartFile file) {
-        Events event = eventsRepository.findById(eventId)
+        Events event = eventsRepository.findById(Objects.requireNonNull(eventId, "eventId must not be null"))
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
 
         try {
@@ -94,22 +96,22 @@ public class EventMediaServiceImpl implements EventMediaService {
             media.setEvent(event);
             media.setFilePath("/uploads/" + storedName);
             media.setFileName(originalName);
-            media.setFileType(mediaType);
+            media.setFileType(Objects.requireNonNull(mediaType, "mediaType must not be null"));
             media.setFileSize(file.getSize());
             return eventMediaRepository.save(media);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException("Failed to upload media file", e);
         }
     }
 
     @Override
     public void deleteEventMedia(Integer id) {
-        eventMediaRepository.deleteById(id);
+        eventMediaRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public EventMedia updateEventMedia(Integer id, EventMedia eventMediaDetails) {
-        Optional<EventMedia> existingEventMedia = eventMediaRepository.findById(id);
+        Optional<EventMedia> existingEventMedia = eventMediaRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingEventMedia.isPresent()) {
             EventMedia eventMedia = existingEventMedia.get();
             eventMedia.setFileName(eventMediaDetails.getFileName());

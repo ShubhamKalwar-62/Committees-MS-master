@@ -2,10 +2,16 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TaskCreateComponent } from './task-create/task-create.component';
 import { TaskListComponent } from './task-list/task-list.component';
+import { RoleGuard } from '../../guards/role.guard';
 
 const routes: Routes = [
   { path: '', component: TaskListComponent },
-  { path: 'create', component: TaskCreateComponent }
+  {
+    path: 'create',
+    component: TaskCreateComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['ADMIN', 'FACULTY'] }
+  }
 ];
 
 @NgModule({

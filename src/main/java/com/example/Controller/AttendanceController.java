@@ -2,11 +2,13 @@ package com.example.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Entity.Attendance;
 import com.example.Response.ResponceBean;
 import com.example.Service.AttendanceService;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +47,7 @@ public class AttendanceController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get attendance by ID", description = "Retrieve attendance by ID")
-    public ResponseEntity<ResponceBean<Attendance>> getAttendanceById(@PathVariable Integer id) {
+    public ResponseEntity<ResponceBean<Attendance>> getAttendanceById(@PathVariable @NonNull Integer id) {
         Optional<Attendance> attendance = attendanceService.getAttendanceById(id);
         return attendance.map(value -> ResponseEntity.ok(ResponceBean.success("Attendance retrieved successfully", value)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Attendance not found")));
@@ -52,14 +55,14 @@ public class AttendanceController {
 
     @PostMapping
     @Operation(summary = "Create attendance", description = "Create a new attendance record")
-    public ResponseEntity<ResponceBean<Attendance>> createAttendance(@RequestBody Attendance attendance) {
+    public ResponseEntity<ResponceBean<Attendance>> createAttendance(@RequestBody @NonNull Attendance attendance) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponceBean.success("Attendance created successfully", attendanceService.saveAttendance(attendance)));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update attendance", description = "Update an attendance record")
-    public ResponseEntity<ResponceBean<Attendance>> updateAttendance(@PathVariable Integer id, @RequestBody Attendance attendance) {
+    public ResponseEntity<ResponceBean<Attendance>> updateAttendance(@PathVariable @NonNull Integer id, @RequestBody @NonNull Attendance attendance) {
         Attendance updated = attendanceService.updateAttendance(id, attendance);
         if (updated == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Attendance not found"));
@@ -69,7 +72,7 @@ public class AttendanceController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Patch attendance", description = "Partially update attendance record")
-    public ResponseEntity<ResponceBean<Attendance>> patchAttendance(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<ResponceBean<Attendance>> patchAttendance(@PathVariable @NonNull Integer id, @RequestBody @NonNull Map<String, Object> updates) {
         Optional<Attendance> existing = attendanceService.getAttendanceById(id);
         if (existing.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Attendance not found"));
@@ -78,9 +81,9 @@ public class AttendanceController {
             updates.remove("attendanceId");
             updates.remove("createdAt");
             Attendance patched = objectMapper.updateValue(existing.get(), updates);
-            Attendance saved = attendanceService.saveAttendance(patched);
+            Attendance saved = attendanceService.saveAttendance(Objects.requireNonNull(patched, "patched attendance must not be null"));
             return ResponseEntity.ok(ResponceBean.success("Attendance patched successfully", saved));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | JsonMappingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
         }
@@ -88,7 +91,7 @@ public class AttendanceController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete attendance", description = "Delete an attendance record")
-    public ResponseEntity<ResponceBean<String>> deleteAttendance(@PathVariable Integer id) {
+    public ResponseEntity<ResponceBean<String>> deleteAttendance(@PathVariable @NonNull Integer id) {
         Optional<Attendance> existing = attendanceService.getAttendanceById(id);
         if (existing.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error("Attendance not found"));

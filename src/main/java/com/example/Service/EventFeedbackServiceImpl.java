@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class EventFeedbackServiceImpl implements EventFeedbackService {
 
     @Override
     public Optional<EventFeedback> getFeedbackById(Integer id) {
-        return eventFeedbackRepository.findById(id);
+        return eventFeedbackRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -70,17 +71,17 @@ public class EventFeedbackServiceImpl implements EventFeedbackService {
 
     @Override
     public EventFeedback saveFeedback(EventFeedback feedback) {
-        return eventFeedbackRepository.save(feedback);
+        return eventFeedbackRepository.save(Objects.requireNonNull(feedback, "feedback must not be null"));
     }
 
     @Override
     public void deleteFeedback(Integer id) {
-        eventFeedbackRepository.deleteById(id);
+        eventFeedbackRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public EventFeedback updateFeedback(Integer id, EventFeedback feedbackDetails) {
-        Optional<EventFeedback> existingFeedback = eventFeedbackRepository.findById(id);
+        Optional<EventFeedback> existingFeedback = eventFeedbackRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingFeedback.isPresent()) {
             EventFeedback feedback = existingFeedback.get();
             feedback.setRating(feedbackDetails.getRating());

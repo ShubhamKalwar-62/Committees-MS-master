@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { WorkspaceSectionComponent } from './workspace-section/workspace-section.component';
 import { MailToolsComponent } from './mail-tools/mail-tools.component';
+import { StudentProfileComponent } from './student-profile/student-profile.component';
 import { RoleGuard } from '../../guards/role.guard';
 
 const routes: Routes = [
@@ -49,6 +50,12 @@ const routes: Routes = [
     component: MailToolsComponent,
     canActivate: [RoleGuard],
     data: { roles: ['ADMIN'] }
+  },
+  {
+    path: 'profile',
+    component: StudentProfileComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['STUDENT'] }
   }
 ];
 

@@ -1,0 +1,8 @@
+.event-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+}
+
+.register-btn:disabled {
+	transform: none;
+}

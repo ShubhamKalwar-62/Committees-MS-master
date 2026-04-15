@@ -23,6 +23,7 @@ import com.example.Entity.Roles;
 import com.example.Repository.CommitteeRepository;
 import com.example.Response.ResponceBean;
 import com.example.Service.RolesService;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -139,7 +140,7 @@ public class RolesController {
             }
             Roles saved = rolesService.saveRole(patched);
             return ResponseEntity.ok(ResponceBean.success("Role patched successfully", saved));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | JsonMappingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
         }
     }

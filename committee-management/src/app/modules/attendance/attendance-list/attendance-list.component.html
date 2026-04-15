@@ -1,28 +1,85 @@
-<section>
-	<div class="d-flex justify-content-between align-items-center mb-3">
-		<h2 class="mb-0">Attendance</h2>
-		<a routerLink="/attendance/mark" class="btn btn-primary">Mark Attendance</a>
+<section class="w-full space-y-5">
+	<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<h2 class="page-header-title">Attendance</h2>
+				<p class="page-header-subtitle">Monitor event participation and check-in records.</p>
+				<p *ngIf="selectedEventId" class="mb-0 mt-1 text-xs font-medium text-blue-600">Showing records for Event ID {{ selectedEventId }}</p>
+			</div>
+
+			<div class="flex flex-wrap gap-2">
+				<a
+					*ngIf="canMarkAttendance"
+					routerLink="/attendance/mark"
+					[queryParams]="selectedEventId ? { eventId: selectedEventId } : {}"
+					class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:text-white"
+				>
+					Mark Attendance
+				</a>
+				<a
+					*ngIf="selectedEventId"
+					routerLink="/attendance"
+					class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-slate-50 hover:text-slate-800"
+				>
+					Clear Filter
+				</a>
+			</div>
+		</div>
 	</div>
-	<div class="table-responsive bg-white rounded-3 shadow-sm p-2">
-		<table class="table table-striped mb-0">
-			<thead>
-				<tr>
-					<th>User ID</th>
-					<th>Event ID</th>
-					<th>Status</th>
-					<th>Check In</th>
-					<th>Remarks</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr *ngFor="let item of records">
-					<td>{{ item.userId }}</td>
-					<td>{{ item.eventId }}</td>
-					<td>{{ item.status }}</td>
-					<td>{{ item.checkInTime || '-' }}</td>
-					<td>{{ item.remarks || '-' }}</td>
-				</tr>
-			</tbody>
-		</table>
+
+	<article class="rounded-2xl bg-gradient-to-r from-slate-900 via-cyan-800 to-teal-700 p-5 text-white shadow-lg">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<p class="mb-1 text-xs font-semibold uppercase tracking-[0.13em] text-cyan-100">Attendance Pulse</p>
+				<h3 class="mb-0 text-xl font-bold">Participation Monitor</h3>
+			</div>
+			<span class="inline-flex items-center rounded-xl border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-cyan-50">
+				{{ records.length }} Records
+			</span>
+		</div>
+
+		<p class="mb-0 mt-4 text-sm text-cyan-50">
+			{{ selectedEventId ? ('Focused view for Event ID ' + selectedEventId) : 'Showing attendance records across events.' }}
+		</p>
+	</article>
+
+	<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
+		<div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+			<h4 class="panel-title mb-0">Attendance Records</h4>
+			<span class="inline-flex items-center rounded-xl bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.11em] text-slate-600">Live Feed</span>
+		</div>
+
+		<div class="overflow-x-auto">
+			<table class="min-w-full table-auto border-collapse">
+				<thead class="bg-slate-50">
+					<tr class="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+						<th class="px-4 py-3">User ID</th>
+						<th class="px-4 py-3">Event ID</th>
+						<th class="px-4 py-3">Status</th>
+						<th class="px-4 py-3">Check In</th>
+						<th class="px-4 py-3">Remarks</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+					<tr *ngFor="let item of records" class="attendance-row transition-colors">
+						<td class="px-4 py-3.5 font-medium">{{ item.userId }}</td>
+						<td class="px-4 py-3.5 font-medium">{{ item.eventId }}</td>
+						<td class="px-4 py-3.5">
+							<span
+								class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase"
+								[ngClass]="getAttendanceStatusBadgeClass(item.status)"
+							>
+								{{ item.status || 'UNKNOWN' }}
+							</span>
+						</td>
+						<td class="px-4 py-3.5 text-slate-600">{{ formatDateTime(item.checkInTime) }}</td>
+						<td class="px-4 py-3.5 text-slate-600">{{ item.remarks || '-' }}</td>
+					</tr>
+					<tr *ngIf="!records.length">
+						<td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500">No attendance records available.</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 	</div>
 </section>

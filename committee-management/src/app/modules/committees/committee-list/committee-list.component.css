@@ -1,0 +1,9 @@
+.committee-card {
+	transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.committee-card:hover {
+	transform: translateY(-2px);
+	border-color: #dbe6f6;
+	box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+}

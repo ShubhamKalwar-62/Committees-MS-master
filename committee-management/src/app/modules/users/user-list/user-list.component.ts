@@ -19,4 +19,37 @@ export class UserListComponent {
     });
   }
 
+  getCountByRole(role: string): number {
+    const expected = (role || '').toUpperCase();
+    return this.users.filter((user) => (user.role || '').toUpperCase() === expected).length;
+  }
+
+  getRoleBadgeClass(role: string | undefined): string {
+    const normalized = (role || '').toUpperCase();
+    if (normalized === 'ADMIN') {
+      return 'border-rose-200 bg-rose-50 text-rose-700';
+    }
+    if (normalized === 'FACULTY') {
+      return 'border-amber-200 bg-amber-50 text-amber-700';
+    }
+    if (normalized === 'STUDENT') {
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    }
+    return 'border-slate-200 bg-slate-100 text-slate-700';
+  }
+
+  getUserInitials(name: string | undefined): string {
+    const normalized = (name || '').trim();
+    if (!normalized) {
+      return 'U';
+    }
+
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+  }
+
 }

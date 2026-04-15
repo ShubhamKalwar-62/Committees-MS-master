@@ -1,8 +1,51 @@
-<section *ngIf="committee" class="card shadow-sm">
-	<div class="card-body">
-		<h3>{{ committee.committeeName }}</h3>
-		<p class="mb-1"><strong>Faculty Incharge:</strong> {{ committee.facultyInchargeName || '-' }}</p>
-		<p class="mb-1"><strong>Position:</strong> {{ committee.facultyPosition || '-' }}</p>
-		<p class="mb-0"><strong>About:</strong> {{ committee.committeeInfo || 'No details available' }}</p>
+<section class="w-full space-y-4">
+	<article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<div>
+				<h2 class="page-header-title">Committee Details</h2>
+				<p class="page-header-subtitle">Review committee ownership and faculty metadata.</p>
+			</div>
+
+			<a
+				class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-slate-50 hover:text-slate-800"
+				[routerLink]="['..']"
+			>
+				Back To Committees
+			</a>
+		</div>
+	</article>
+
+	<div *ngIf="loading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+		Loading committee details...
 	</div>
+
+	<div *ngIf="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+		{{ errorMessage }}
+	</div>
+
+	<article *ngIf="committee && !loading" class="committee-detail-panel rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="mb-3 flex flex-wrap items-center gap-2">
+			<h3 class="mb-0 text-2xl font-bold tracking-tight text-slate-800">{{ committee.committeeName }}</h3>
+			<span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">
+				ID {{ requestedCommitteeId || committee.id || '-' }}
+			</span>
+		</div>
+
+		<div class="grid gap-3 md:grid-cols-2">
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Faculty In-Charge</p>
+				<p class="detail-meta-value">{{ committee.facultyInchargeName || '-' }}</p>
+			</article>
+
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Faculty Position</p>
+				<p class="detail-meta-value">{{ committee.facultyPosition || '-' }}</p>
+			</article>
+
+			<article class="detail-meta-card md:col-span-2">
+				<p class="detail-meta-label">About Committee</p>
+				<p class="detail-meta-value">{{ committee.committeeInfo || 'No details available.' }}</p>
+			</article>
+		</div>
+	</article>
 </section>

@@ -28,6 +28,8 @@ export class CommitteeService {
     const data = (raw || {}) as {
       committeeId?: number;
       id?: number;
+      committeeID?: number;
+      committee_id?: number;
       committeeName?: string;
       facultyInchargeName?: string;
       facultyPosition?: string;
@@ -36,8 +38,11 @@ export class CommitteeService {
       login?: { loginId?: number };
     };
 
+    const idCandidate = data.committeeId ?? data.id ?? data.committeeID ?? data.committee_id;
+    const resolvedId = Number(idCandidate);
+
     return {
-      id: data.committeeId ?? data.id,
+      id: Number.isFinite(resolvedId) ? resolvedId : undefined,
       committeeName: data.committeeName || '',
       facultyInchargeName: data.facultyInchargeName,
       facultyPosition: data.facultyPosition,

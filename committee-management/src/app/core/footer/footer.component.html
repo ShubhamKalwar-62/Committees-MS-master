@@ -1,3 +1,12 @@
-<footer class="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-xs text-slate-600 shadow-lg transition-all">
-  <small>Copyright {{ year }} Committee & Event Management System. All rights reserved.</small>
+<footer class="border-t border-slate-200 bg-white px-4 py-5 text-xs text-slate-500">
+  <div class="mx-auto flex max-w-7xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <p class="mb-0">&copy; {{ year }} CommitteeOS. All rights reserved.</p>
+
+    <div class="flex flex-wrap items-center gap-4 md:justify-end">
+      <a routerLink="/" fragment="documentation" class="footer-link">Privacy Policy</a>
+      <a routerLink="/" fragment="guidelines" class="footer-link">Terms of Service</a>
+      <a routerLink="/" fragment="member-roles" class="footer-link">Accessibility</a>
+      <a routerLink="/" fragment="documentation" class="footer-link">Contact Support</a>
+    </div>
+  </div>
 </footer>

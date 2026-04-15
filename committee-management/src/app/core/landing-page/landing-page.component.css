@@ -1,1 +1,50 @@
+:host {
+	display: block;
+	font-family: 'Poppins', 'Segoe UI', sans-serif;
+	color: #0f172a;
+}
+
+.trust-avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.9rem;
+	width: 1.9rem;
+	border-radius: 999px;
+	border: 2px solid #f8fafc;
+	background: #ffffff;
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: #1d4ed8;
+}
+
+.feature-card {
+	transition: box-shadow 0.2s ease;
+	border: 1px solid #e2e8f0;
+}
+
+.feature-card:hover {
+	box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.feature-nav-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	width: 2rem;
+	border-radius: 999px;
+	border: 1px solid #d1d5db;
+	background: #ffffff;
+	color: #6b7280;
+	font-size: 0.9rem;
+	line-height: 1;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.feature-nav-btn:hover {
+	background: #f3f4f6;
+	color: #374151;
+}
+
 

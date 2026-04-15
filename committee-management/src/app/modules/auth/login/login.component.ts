@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,11 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private notificationService: NotificationService,
+    private router: Router
+  ) {}
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
@@ -33,11 +38,25 @@ export class LoginComponent {
     this.authService.login(this.loginForm.getRawValue() as { email: string; password: string }).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigateByUrl(this.authService.getRoleHomeRoute());
+        const homeRoute = this.authService.getRoleHomeRoute();
+        const role = this.authService.getCurrentRole() || 'USER';
+        this.notificationService.add({
+          title: 'Signed In',
+          message: `You are signed in as ${role}.`,
+          level: 'success',
+          actionRoute: homeRoute
+        });
+        this.router.navigateByUrl(homeRoute);
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err?.error?.message || 'Login failed. Please check your credentials.';
+        this.notificationService.add({
+          title: 'Sign In Failed',
+          message: this.errorMessage,
+          level: 'warning',
+          actionRoute: '/auth/login'
+        });
       }
     });
   }

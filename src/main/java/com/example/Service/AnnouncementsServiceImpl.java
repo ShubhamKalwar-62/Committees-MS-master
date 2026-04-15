@@ -2,6 +2,7 @@ package com.example.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class AnnouncementsServiceImpl implements AnnouncementsService {
 
     @Override
     public Optional<Announcements> getAnnouncementById(Integer id) {
-        return announcementsRepository.findById(id);
+        return announcementsRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -41,7 +42,7 @@ public class AnnouncementsServiceImpl implements AnnouncementsService {
 
     @Override
     public List<Announcements> getAnnouncementsByCommitteeId(Integer committeeId) {
-        return announcementsRepository.findByCommitteeIdOrderByCreatedAtDesc(committeeId);
+        return announcementsRepository.findByCommitteeIdOrderByCreatedAtDesc(Objects.requireNonNull(committeeId, "committeeId must not be null"));
     }
 
     @Override
@@ -56,17 +57,17 @@ public class AnnouncementsServiceImpl implements AnnouncementsService {
 
     @Override
     public Announcements saveAnnouncement(Announcements announcement) {
-        return announcementsRepository.save(announcement);
+        return announcementsRepository.save(Objects.requireNonNull(announcement, "announcement must not be null"));
     }
 
     @Override
     public void deleteAnnouncement(Integer id) {
-        announcementsRepository.deleteById(id);
+        announcementsRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Announcements updateAnnouncement(Integer id, Announcements announcementDetails) {
-        Optional<Announcements> existingAnnouncement = announcementsRepository.findById(id);
+        Optional<Announcements> existingAnnouncement = announcementsRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingAnnouncement.isPresent()) {
             Announcements announcement = existingAnnouncement.get();
             announcement.setMessage(announcementDetails.getMessage());

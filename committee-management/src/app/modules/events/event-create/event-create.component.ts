@@ -5,6 +5,7 @@ import { Event } from '../../../models/event.model';
 import { Committee } from '../../../models/committee.model';
 import { CommitteeService } from '../../../services/committee.service';
 import { EventService } from '../../../services/event.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-event-create',
@@ -33,6 +34,7 @@ export class EventCreateComponent {
   constructor(
     private eventService: EventService,
     private committeeService: CommitteeService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -56,11 +58,24 @@ export class EventCreateComponent {
     this.eventService.createEvent(this.eventForm.getRawValue() as Event).subscribe({
       next: () => {
         this.submitting = false;
+        this.notificationService.add({
+          title: 'Event Created',
+          message: 'Event created successfully.',
+          level: 'success',
+          actionRoute: '/events'
+        });
         this.router.navigate(['/events']);
       },
       error: (err) => {
         this.submitting = false;
-        this.errorMessage = err?.error?.message || 'Unable to create event. Check Committee ID and data values.';
+        const message = err?.error?.message || 'Unable to create event. Check Committee ID and data values.';
+        this.errorMessage = message;
+        this.notificationService.add({
+          title: 'Event Creation Failed',
+          message,
+          level: 'error',
+          actionRoute: '/events/create'
+        });
       }
     });
   }

@@ -1,45 +1,79 @@
-<section class="card shadow-sm">
-	<div class="card-body">
-		<h3 class="mb-3">Create Event</h3>
+<section class="space-y-4">
+	<article class="workspace-panel">
+		<div class="workspace-panel-header">
+			<div>
+				<h3 class="workspace-panel-title">Create Event</h3>
+				<p class="workspace-panel-subtitle">Set up event details, ownership, and participation limits.</p>
+			</div>
+			<a routerLink="/events" class="workspace-btn-secondary">Back To Events</a>
+		</div>
+
 		<form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
-			<div class="row g-3">
-				<div class="col-md-6">
-					<label class="form-label">Event Name</label>
-					<input class="form-control" formControlName="eventName" />
+			<div class="workspace-form-grid two-col">
+				<div>
+					<label class="workspace-label">Event Name</label>
+					<input class="workspace-input" formControlName="eventName" />
+					<p *ngIf="eventForm.controls.eventName.touched && eventForm.controls.eventName.invalid" class="workspace-helper-text text-rose-600">
+						Event name is required.
+					</p>
 				</div>
-				<div class="col-md-6">
-					<label class="form-label">Date</label>
-					<input type="datetime-local" class="form-control" formControlName="eventDate" />
+
+				<div>
+					<label class="workspace-label">Date</label>
+					<input type="datetime-local" class="workspace-input" formControlName="eventDate" />
 				</div>
-				<div class="col-md-6">
-					<label class="form-label">Location</label>
-					<input class="form-control" formControlName="location" />
+
+				<div>
+					<label class="workspace-label">Location</label>
+					<input class="workspace-input" formControlName="location" />
 				</div>
-				<div class="col-md-6">
-					<label class="form-label">Max Participants</label>
-					<input type="number" class="form-control" formControlName="maxParticipants" />
+
+				<div>
+					<label class="workspace-label">Max Participants</label>
+					<input type="number" class="workspace-input" formControlName="maxParticipants" />
 				</div>
-				<div class="col-md-6">
-					<label class="form-label">Committee</label>
-					<select class="form-select" formControlName="committeeId">
+
+				<div>
+					<label class="workspace-label">Committee</label>
+					<select class="workspace-select" formControlName="committeeId">
 						<option *ngFor="let committee of committees" [ngValue]="committee.id">
 							#{{ committee.id }} - {{ committee.committeeName }}
 						</option>
 					</select>
 				</div>
-				<div class="col-md-6">
-					<label class="form-label">Category ID (optional)</label>
-					<input type="number" class="form-control" formControlName="categoryId" min="1" />
+
+				<div>
+					<label class="workspace-label">Category ID</label>
+					<input type="number" class="workspace-input" formControlName="categoryId" min="1" />
 				</div>
-				<div class="col-12">
-					<label class="form-label">Description</label>
-					<textarea class="form-control" formControlName="description"></textarea>
+
+				<div>
+					<label class="workspace-label">Status</label>
+					<select class="workspace-select" formControlName="status">
+						<option value="PLANNED">PLANNED</option>
+						<option value="ONGOING">ONGOING</option>
+						<option value="COMPLETED">COMPLETED</option>
+						<option value="CANCELLED">CANCELLED</option>
+					</select>
+				</div>
+
+				<div class="md:col-span-2">
+					<label class="workspace-label">Description</label>
+					<textarea class="workspace-textarea" formControlName="description"></textarea>
 				</div>
 			</div>
-			<p *ngIf="errorMessage" class="text-danger mt-3 mb-0">{{ errorMessage }}</p>
-			<div class="mt-3">
-				<app-reusable-button [type]="'submit'" [disabled]="submitting" [label]="submitting ? 'Saving...' : 'Save Event'"></app-reusable-button>
+
+			<p *ngIf="errorMessage" class="workspace-error">{{ errorMessage }}</p>
+
+			<div class="workspace-action-row">
+				<button
+					type="submit"
+					[disabled]="submitting"
+					class="workspace-btn-primary disabled:cursor-not-allowed disabled:opacity-65"
+				>
+					{{ submitting ? 'Saving...' : 'Save Event' }}
+				</button>
 			</div>
 		</form>
-	</div>
+	</article>
 </section>

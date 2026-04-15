@@ -1,16 +1,21 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Router } from '@angular/router';
 import { AppComponent } from './app.component';
+import { AuthService } from './services/auth.service';
 
 describe('AppComponent', () => {
+  const authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['isAuthenticated']);
+  const routerStub = { url: '/' };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        RouterModule.forRoot([])
+      declarations: [AppComponent],
+      providers: [
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: Router, useValue: routerStub }
       ],
-      declarations: [
-        AppComponent
-      ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
@@ -20,16 +25,22 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'committee-management'`, () => {
+  it('should expose the app name', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('committee-management');
+    expect(app.appName).toEqual('CommitteeOS');
   });
 
-  it('should render title', () => {
+  it('should show role workspace only on non-auth routes when authenticated', () => {
+    authServiceSpy.isAuthenticated.and.returnValue(true);
+    routerStub.url = '/dashboard';
+
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, committee-management');
+    const app = fixture.componentInstance;
+
+    expect(app.showRoleWorkspace).toBeTrue();
+
+    routerStub.url = '/auth/login';
+    expect(app.showRoleWorkspace).toBeFalse();
   });
 });

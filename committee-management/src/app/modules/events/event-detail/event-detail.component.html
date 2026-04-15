@@ -1,12 +1,54 @@
-<section *ngIf="event" class="card shadow-sm">
-	<div class="card-body">
-		<h3>{{ event.eventName }}</h3>
-		<p class="text-muted">{{ event.description || 'No description available.' }}</p>
-		<ul class="list-group list-group-flush">
-			<li class="list-group-item"><strong>Date:</strong> {{ event.eventDate }}</li>
-			<li class="list-group-item"><strong>Location:</strong> {{ event.location || '-' }}</li>
-			<li class="list-group-item"><strong>Status:</strong> {{ event.status || '-' }}</li>
-			<li class="list-group-item"><strong>Max Participants:</strong> {{ event.maxParticipants || '-' }}</li>
-		</ul>
-	</div>
+<section class="space-y-4">
+	<article *ngIf="event; else eventUnavailable" class="workspace-panel event-detail-panel">
+		<div class="workspace-panel-header">
+			<div>
+				<h3 class="workspace-panel-title">{{ event.eventName }}</h3>
+				<p class="workspace-panel-subtitle">Detailed view of the selected event record.</p>
+			</div>
+			<a routerLink="/events" class="workspace-btn-secondary">Back To Events</a>
+		</div>
+
+		<div class="mb-3 flex flex-wrap items-center gap-2">
+			<span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase" [ngClass]="getStatusBadgeClass(event.status)">
+				{{ event.status || 'UNKNOWN' }}
+			</span>
+			<span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold uppercase text-blue-700">
+				{{ formatDateTime(event.eventDate) }}
+			</span>
+		</div>
+
+		<p class="mb-4 text-sm leading-relaxed text-slate-600">{{ event.description || 'No description available.' }}</p>
+
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Date</p>
+				<p class="detail-meta-value">{{ formatDateTime(event.eventDate) }}</p>
+			</article>
+
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Location</p>
+				<p class="detail-meta-value">{{ event.location || '-' }}</p>
+			</article>
+
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Max Participants</p>
+				<p class="detail-meta-value">{{ event.maxParticipants || '-' }}</p>
+			</article>
+
+			<article class="detail-meta-card">
+				<p class="detail-meta-label">Committee ID</p>
+				<p class="detail-meta-value">{{ event.committeeId || '-' }}</p>
+			</article>
+		</div>
+	</article>
+
+	<ng-template #eventUnavailable>
+		<article class="workspace-panel">
+			<h3 class="workspace-panel-title">Event Not Found</h3>
+			<p class="workspace-panel-subtitle">The requested event could not be loaded or does not exist.</p>
+			<div class="workspace-action-row">
+				<a routerLink="/events" class="workspace-btn-secondary">Back To Events</a>
+			</div>
+		</article>
+	</ng-template>
 </section>

@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public Optional<Users> getUserById(Integer id) {
-        return usersRepository.findById(id);
+        return usersRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -44,17 +45,17 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public Users saveUser(Users user) {
-        return usersRepository.save(user);
+        return usersRepository.save(Objects.requireNonNull(user, "user must not be null"));
     }
 
     @Override
     public void deleteUser(Integer id) {
-        usersRepository.deleteById(id);
+        usersRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Users updateUser(Integer id, Users userDetails) {
-        Optional<Users> existingUser = usersRepository.findById(id);
+        Optional<Users> existingUser = usersRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingUser.isPresent()) {
             Users user = existingUser.get();
             user.setName(userDetails.getName());

@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+@source "./**/*.{html,ts}";
 
-@theme {
+:root {
   --color-primary: #2563eb;
   --color-dark: #1e293b;
   --color-accent: #22c55e;
@@ -16,9 +17,7 @@ body {
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background: radial-gradient(circle at 12% 12%, rgba(37, 99, 235, 0.08), transparent 30%),
-    radial-gradient(circle at 88% 20%, rgba(34, 197, 94, 0.1), transparent 25%),
-    #f8fafc;
+  background: #f3f4f6;
   color: #1e293b;
 }
 
@@ -26,4 +25,192 @@ body {
   font-size: 20px;
   line-height: 1;
   vertical-align: middle;
+}
+
+.workspace-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  padding: 1rem;
+}
+
+.workspace-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.workspace-panel-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #1e293b;
+}
+
+.workspace-panel-subtitle {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.workspace-form-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.workspace-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #334155;
+}
+
+.workspace-input,
+.workspace-select,
+.workspace-textarea {
+  width: 100%;
+  border: 1px solid #dbe3ef;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  padding: 0.62rem 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.workspace-input:focus,
+.workspace-select:focus,
+.workspace-textarea:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+  background: #ffffff;
+}
+
+.workspace-textarea {
+  min-height: 6.25rem;
+  resize: vertical;
+}
+
+.workspace-helper-text {
+  margin-top: 0.3rem;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.workspace-error {
+  border: 1px solid #fecdd3;
+  border-radius: 0.75rem;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 0.84rem;
+  font-weight: 500;
+  margin: 0.9rem 0 0;
+  padding: 0.62rem 0.75rem;
+}
+
+.workspace-action-row {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.workspace-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 0;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 0.58rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.workspace-btn-primary:hover {
+  color: #ffffff;
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.workspace-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 1px solid #d1dbe8;
+  background: #ffffff;
+  color: #475569;
+  padding: 0.58rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.workspace-btn-secondary:hover {
+  color: #334155;
+  background: #f8fafc;
+}
+
+.page-header-title {
+  margin: 0;
+  font-size: clamp(1.48rem, 1.36rem + 0.55vw, 1.92rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.page-header-subtitle {
+  margin: 0.42rem 0 0;
+  font-size: clamp(0.88rem, 0.84rem + 0.18vw, 0.99rem);
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 62ch;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: clamp(1.08rem, 1.02rem + 0.24vw, 1.2rem);
+  line-height: 1.26;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+@media (min-width: 768px) {
+  .workspace-panel {
+    padding: 1.15rem;
+  }
+
+  .workspace-form-grid.two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-form-grid.three-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639.98px) {
+  .page-header-subtitle {
+    max-width: 100%;
+  }
 }

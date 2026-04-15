@@ -9,10 +9,14 @@ import { AuthService } from './services/auth.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  appName = 'Committee & Event Management System';
+  appName = 'CommitteeOS';
   currentYear = new Date().getFullYear();
 
   constructor(private authService: AuthService, private router: Router) {}
+
+  get useImmersiveStudentProfileLayout(): boolean {
+    return false;
+  }
 
   get showRoleWorkspace(): boolean {
     if (!this.authService.isAuthenticated()) {
@@ -21,5 +25,10 @@ export class AppComponent {
 
     const path = this.router.url.split('?')[0].split('#')[0];
     return path !== '/' && !path.startsWith('/auth');
+  }
+
+  get isLandingRoute(): boolean {
+    const path = this.router.url.split('?')[0].split('#')[0];
+    return path === '/';
   }
 }

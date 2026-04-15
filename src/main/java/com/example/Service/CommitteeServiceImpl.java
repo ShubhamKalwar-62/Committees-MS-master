@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     public Optional<Committee> getCommitteeById(Integer id) {
-        return committeeRepository.findById(id);
+        return committeeRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -44,17 +45,17 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     public Committee saveCommittee(Committee committee) {
-        return committeeRepository.save(committee);
+        return committeeRepository.save(Objects.requireNonNull(committee, "committee must not be null"));
     }
 
     @Override
     public void deleteCommittee(Integer id) {
-        committeeRepository.deleteById(id);
+        committeeRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Committee updateCommittee(Integer id, Committee committeeDetails) {
-        Optional<Committee> existingCommittee = committeeRepository.findById(id);
+        Optional<Committee> existingCommittee = committeeRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingCommittee.isPresent()) {
             Committee committee = existingCommittee.get();
             committee.setCommitteeName(committeeDetails.getCommitteeName());

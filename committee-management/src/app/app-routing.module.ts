@@ -23,6 +23,36 @@ const routes: Routes = [
     data: { roles: ['FACULTY'] }
   },
   {
+    path: 'student/events',
+    loadChildren: () => import('./modules/events/events.module').then((m) => m.EventsModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['STUDENT'] }
+  },
+  {
+    path: 'student/tasks',
+    loadChildren: () => import('./modules/tasks/tasks.module').then((m) => m.TasksModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['STUDENT'] }
+  },
+  {
+    path: 'student/attendance',
+    loadChildren: () => import('./modules/attendance/attendance.module').then((m) => m.AttendanceModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['STUDENT'] }
+  },
+  {
+    path: 'student/announcements',
+    loadChildren: () => import('./modules/announcements/announcements.module').then((m) => m.AnnouncementsModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['STUDENT'] }
+  },
+  {
+    path: 'student/committees',
+    loadChildren: () => import('./modules/committees/committees.module').then((m) => m.CommitteesModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['STUDENT'] }
+  },
+  {
     path: 'student',
     loadChildren: () => import('./modules/dashboard/dashboard.module').then((m) => m.DashboardModule),
     canActivate: [AuthGuard, RoleGuard],

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { CommitteeService } from './committee.service';
 
@@ -6,7 +7,9 @@ describe('CommitteeService', () => {
   let service: CommitteeService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule]
+    });
     service = TestBed.inject(CommitteeService);
   });
 
@@ -14,3 +17,4 @@ describe('CommitteeService', () => {
     expect(service).toBeTruthy();
   });
 });
+

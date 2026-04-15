@@ -31,8 +31,8 @@ export class EventService {
     );
   }
 
-  registerForEvent(eventId: number, userId: number): Observable<unknown> {
-    return this.http.post(this.participantUrl, {
+  registerForEvent(eventId: number, userId: number): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(this.participantUrl, {
       event: { eventId },
       user: { userId }
     });

@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class EventParticipantsServiceImpl implements EventParticipantsService {
 
     @Override
     public Optional<EventParticipants> getParticipantById(Integer id) {
-        return eventParticipantsRepository.findById(id);
+        return eventParticipantsRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -70,17 +71,17 @@ public class EventParticipantsServiceImpl implements EventParticipantsService {
 
     @Override
     public EventParticipants saveParticipant(EventParticipants participant) {
-        return eventParticipantsRepository.save(participant);
+        return eventParticipantsRepository.save(Objects.requireNonNull(participant, "participant must not be null"));
     }
 
     @Override
     public void deleteParticipant(Integer id) {
-        eventParticipantsRepository.deleteById(id);
+        eventParticipantsRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public EventParticipants updateParticipant(Integer id, EventParticipants participantDetails) {
-        Optional<EventParticipants> existingParticipant = eventParticipantsRepository.findById(id);
+        Optional<EventParticipants> existingParticipant = eventParticipantsRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingParticipant.isPresent()) {
             EventParticipants participant = existingParticipant.get();
             participant.setStatus(participantDetails.getStatus());

@@ -5,6 +5,7 @@ import { Committee } from '../../../models/committee.model';
 import { Task } from '../../../models/task.model';
 import { User } from '../../../models/user.model';
 import { CommitteeService } from '../../../services/committee.service';
+import { NotificationService } from '../../../services/notification.service';
 import { TaskService } from '../../../services/task.service';
 import { UserService } from '../../../services/user.service';
 
@@ -38,6 +39,7 @@ export class TaskCreateComponent {
     private taskService: TaskService,
     private committeeService: CommitteeService,
     private userService: UserService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -68,11 +70,24 @@ export class TaskCreateComponent {
     this.taskService.createTask(this.taskForm.getRawValue() as Task).subscribe({
       next: () => {
         this.submitting = false;
+        this.notificationService.add({
+          title: 'Task Created',
+          message: 'Task created successfully.',
+          level: 'success',
+          actionRoute: '/tasks'
+        });
         this.router.navigate(['/tasks']);
       },
       error: (err) => {
         this.submitting = false;
-        this.errorMessage = err?.error?.message || 'Unable to create task. Check Committee/User IDs and data values.';
+        const message = err?.error?.message || 'Unable to create task. Check Committee/User IDs and data values.';
+        this.errorMessage = message;
+        this.notificationService.add({
+          title: 'Task Creation Failed',
+          message,
+          level: 'error',
+          actionRoute: '/tasks/create'
+        });
       }
     });
   }

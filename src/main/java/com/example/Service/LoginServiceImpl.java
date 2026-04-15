@@ -1,6 +1,7 @@
 package com.example.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public Optional<Login> getLoginById(Integer id) {
-        return loginRepository.findById(id);
+        return loginRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -38,7 +39,7 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public Login saveLogin(Login login) {
-        return loginRepository.save(login);
+        return loginRepository.save(Objects.requireNonNull(login, "login must not be null"));
     }
 
     @Override
@@ -48,12 +49,12 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public void deleteLogin(Integer id) {
-        loginRepository.deleteById(id);
+        loginRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Login updateLogin(Integer id, Login loginDetails) {
-        Optional<Login> existingLogin = loginRepository.findById(id);
+        Optional<Login> existingLogin = loginRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingLogin.isPresent()) {
             Login login = existingLogin.get();
             login.setEmail(loginDetails.getEmail());

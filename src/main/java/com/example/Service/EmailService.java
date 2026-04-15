@@ -44,4 +44,26 @@ public class EmailService {
         logger.info("Registration success email sent to {}", toEmail);
         return true;
     }
+
+    public boolean sendForgotPasswordResetEmail(String toEmail, String role) {
+        if (!mailEnabled) {
+            logger.debug("Mail sending disabled (app.mail.enabled=false). Skipping forgot-password reset email to {}", toEmail);
+            return false;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Password Reset Completed");
+        message.setText(
+            "Hello " + (role == null || role.isBlank() ? "User" : role) + ",\n\n"
+                + "Your account password has been reset by admin after a forgot-password request.\n"
+                + "Please use the new password provided by admin and change it after your next login.\n\n"
+                + "Thank you."
+        );
+
+        mailSender.send(message);
+        logger.info("Forgot-password reset email sent to {}", toEmail);
+        return true;
+    }
 }

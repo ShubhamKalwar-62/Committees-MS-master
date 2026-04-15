@@ -35,3 +35,47 @@ export interface TestEmailResponse {
   mailSent: boolean;
   mailMessage: string;
 }
+
+export interface ForgotPasswordResetRequest {
+  email: string;
+  role: 'STUDENT' | 'FACULTY';
+  newPassword: string;
+}
+
+export interface ForgotPasswordResetResponse {
+  email: string;
+  role: string;
+  mailSent: boolean;
+  mailMessage: string;
+}
+
+export interface MyCommitteeMembership {
+  committeeId?: number;
+  committeeName?: string;
+  memberRole?: string;
+  facultyInchargeName?: string;
+}
+
+export interface MyProfileResponse {
+  email: string;
+  role: string;
+  name?: string;
+  userId?: number;
+  photoDataUrl?: string;
+  committeeMemberships?: MyCommitteeMembership[];
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  email: string;
+  role: string;
+}
+
+export interface ProfilePhotoResponse {
+  photoDataUrl?: string;
+}

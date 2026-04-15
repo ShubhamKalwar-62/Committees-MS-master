@@ -10,13 +10,44 @@ import { CommitteeService } from '../../../services/committee.service';
 })
 export class CommitteeListComponent {
   committees: Committee[] = [];
+  loading = true;
+  errorMessage = '';
 
   constructor(private committeeService: CommitteeService) {}
 
   ngOnInit(): void {
-    this.committeeService.getCommittees().subscribe((committees) => {
-      this.committees = committees;
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.committeeService.getCommittees().subscribe({
+      next: (committees) => {
+        this.loading = false;
+        this.committees = committees;
+      },
+      error: () => {
+        this.loading = false;
+        this.committees = [];
+        this.errorMessage = 'Unable to load committees right now. Please refresh and try again.';
+      }
     });
+  }
+
+  getCommitteeRouteId(committee: Committee): number | null {
+    const id = Number(committee?.id);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  }
+
+  getCommitteeDescription(committee: Committee): string {
+    const info = (committee?.committeeInfo || '').trim();
+    if (!info) {
+      return 'Committee details will be available soon.';
+    }
+
+    if (info.length <= 120) {
+      return info;
+    }
+
+    return `${info.slice(0, 120)}...`;
   }
 
 }

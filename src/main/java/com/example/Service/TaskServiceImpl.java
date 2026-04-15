@@ -2,6 +2,7 @@ package com.example.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> getTaskById(Integer id) {
-        return taskRepository.findById(id);
+        return taskRepository.findById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
@@ -66,17 +67,17 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task saveTask(Task task) {
-        return taskRepository.save(task);
+        return taskRepository.save(Objects.requireNonNull(task, "task must not be null"));
     }
 
     @Override
     public void deleteTask(Integer id) {
-        taskRepository.deleteById(id);
+        taskRepository.deleteById(Objects.requireNonNull(id, "id must not be null"));
     }
 
     @Override
     public Task updateTask(Integer id, Task taskDetails) {
-        Optional<Task> existingTask = taskRepository.findById(id);
+        Optional<Task> existingTask = taskRepository.findById(Objects.requireNonNull(id, "id must not be null"));
         if (existingTask.isPresent()) {
             Task task = existingTask.get();
             task.setTitle(taskDetails.getTitle());

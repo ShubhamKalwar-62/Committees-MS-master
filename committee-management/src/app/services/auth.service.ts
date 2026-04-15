@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { ApiResponse, AuthRequest, AuthResponse, RegisterRequest, TestEmailRequest, TestEmailResponse } from '../models/auth.model';
+import { ApiResponse, AuthRequest, AuthResponse, ChangePasswordRequest, ChangePasswordResponse, ForgotPasswordResetRequest, ForgotPasswordResetResponse, MyProfileResponse, ProfilePhotoResponse, RegisterRequest, TestEmailRequest, TestEmailResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly apiUrl = 'http://localhost:8080/api/auth';
+  private readonly loginApiUrl = 'http://localhost:8080/api/login';
   private readonly roleKey = 'role';
 
   constructor(private http: HttpClient) {}
@@ -47,6 +48,30 @@ export class AuthService {
     return this.http.post<ApiResponse<TestEmailResponse>>(`${this.apiUrl}/test-email`, payload);
   }
 
+  resetForgotPasswordForUser(payload: ForgotPasswordResetRequest): Observable<ApiResponse<ForgotPasswordResetResponse>> {
+    return this.http.post<ApiResponse<ForgotPasswordResetResponse>>(`${this.loginApiUrl}/admin/reset-password`, payload);
+  }
+
+  getMyProfile(): Observable<MyProfileResponse> {
+    return this.http.get<ApiResponse<MyProfileResponse>>(`${this.apiUrl}/me`).pipe(
+      map((res) => res?.data || { email: '', role: '' })
+    );
+  }
+
+  changeMyPassword(payload: ChangePasswordRequest): Observable<ApiResponse<ChangePasswordResponse>> {
+    return this.http.post<ApiResponse<ChangePasswordResponse>>(`${this.apiUrl}/change-password`, payload);
+  }
+
+  uploadMyProfilePhoto(file: File): Observable<ApiResponse<ProfilePhotoResponse>> {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return this.http.post<ApiResponse<ProfilePhotoResponse>>(`${this.apiUrl}/profile-photo`, formData);
+  }
+
+  removeMyProfilePhoto(): Observable<ApiResponse<Record<string, never>>> {
+    return this.http.delete<ApiResponse<Record<string, never>>>(`${this.apiUrl}/profile-photo`);
+  }
+
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem(this.roleKey);
@@ -78,6 +103,14 @@ export class AuthService {
   hasAnyRole(roles: string[]): boolean {
     const currentRole = this.getCurrentRole();
     return roles.map((r) => r.toUpperCase()).includes(currentRole);
+  }
+
+  isStudentRole(): boolean {
+    return this.getCurrentRole() === 'STUDENT';
+  }
+
+  canManageCreationActions(): boolean {
+    return this.hasAnyRole(['ADMIN', 'FACULTY']);
   }
 
   getRoleHomeRoute(): string {

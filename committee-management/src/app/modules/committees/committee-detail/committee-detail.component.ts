@@ -11,17 +11,36 @@ import { CommitteeService } from '../../../services/committee.service';
 })
 export class CommitteeDetailComponent {
   committee?: Committee;
+  loading = true;
+  errorMessage = '';
+  requestedCommitteeId?: number;
 
   constructor(private route: ActivatedRoute, private committeeService: CommitteeService) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) {
-      return;
-    }
+    this.route.paramMap.subscribe((params) => {
+      this.loading = true;
+      this.errorMessage = '';
+      this.committee = undefined;
 
-    this.committeeService.getCommitteeById(id).subscribe((committee) => {
-      this.committee = committee;
+      const id = Number(params.get('id'));
+      if (!Number.isFinite(id) || id <= 0) {
+        this.loading = false;
+        this.errorMessage = 'Invalid committee identifier.';
+        return;
+      }
+
+      this.requestedCommitteeId = id;
+      this.committeeService.getCommitteeById(id).subscribe({
+        next: (committee) => {
+          this.loading = false;
+          this.committee = committee;
+        },
+        error: () => {
+          this.loading = false;
+          this.errorMessage = 'Unable to load committee details right now.';
+        }
+      });
     });
   }
 

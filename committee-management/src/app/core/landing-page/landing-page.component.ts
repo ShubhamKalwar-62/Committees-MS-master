@@ -7,86 +7,52 @@ import { Component } from '@angular/core';
   styleUrl: './landing-page.component.css'
 })
 export class LandingPageComponent {
+  attendanceProgress = 94;
+
+  dashboardStats = [
+    { label: 'Active Committees', value: '12', note: '+2 this month' },
+    { label: 'Upcoming Events', value: '08', note: 'Next: Faculty Gala' }
+  ];
+
+  sessionList = [
+    { title: 'Curriculum Review', time: '14:00', location: 'Boardroom B' }
+  ];
+
   features = [
     {
       icon: 'groups',
-      title: 'Committee Governance',
-      text: 'Structured leadership, role clarity, and transparent handoffs across every committee cycle.'
+      title: 'Committee Management',
+      text: 'Organize member roles, terms, and mandates. Maintain historical records of all committee compositions.'
     },
     {
-      icon: 'event_upcoming',
+      icon: 'calendar_month',
       title: 'Event Operations',
-      text: 'Registrations, venue planning, and execution timelines coordinated in one controlled workspace.'
+      text: 'Full-cycle event lifecycle management from room booking and logistics to digital invitations.'
     },
     {
-      icon: 'school',
-      title: 'Academic Accountability',
-      text: 'Attendance and task performance stay measurable, auditable, and presentation-ready.'
+      icon: 'task_alt',
+      title: 'Task Tracking',
+      text: 'Assign actionable items during meetings and monitor completion with integrated deadlines and alerts.'
+    },
+    {
+      icon: 'monitoring',
+      title: 'Attendance Insights',
+      text: 'Capture real-time attendance via digital check-ins and generate comprehensive participation reports.'
     }
   ];
 
-  badges = ['Role-Based Access', 'JWT Secured', 'Faculty Oversight', 'Presentation Ready'];
-
-  stats = [
-    { label: 'Active Committees', value: '08', trend: '+2 this month' },
-    { label: 'Upcoming Events', value: '24', trend: '5 this week' },
-    { label: 'Open Tasks', value: '17', trend: '89% on track' },
-    { label: 'Attendance Today', value: '94%', trend: 'Campus average' }
-  ];
-
-  milestones = [
-    { time: '09:30', item: 'Faculty committee standup' },
-    { time: '11:00', item: 'Event registration sync' },
-    { time: '14:00', item: 'Task board review with committee leads' }
-  ];
-
-  rolePanels = [
+  showcasePoints = [
     {
-      role: 'Admin Workspace',
-      icon: 'dashboard',
-      summary: 'Global visibility with control over users, events, tasks, attendance and announcements.'
+      title: 'Automated Minute Generation',
+      detail: 'Capture notes and instantly distribute formatted minutes to all participants.'
     },
     {
-      role: 'Faculty Workspace',
-      icon: 'group',
-      summary: 'Committee leadership tools for assigning tasks, validating attendance and monitoring event progress.'
+      title: 'Compliance & Audit Trails',
+      detail: 'Full version control and history for every committee mandate and vote.'
     },
     {
-      role: 'Student Workspace',
-      icon: 'event',
-      summary: 'Simple participation hub for upcoming events, personal tasks, announcements and attendance tracking.'
+      title: 'Resource Optimization',
+      detail: 'Prevent room double-bookings and manage audio-visual requirements seamlessly.'
     }
-  ];
-
-  workflowSteps = [
-    {
-      step: '01',
-      title: 'Plan Committees',
-      text: 'Create committees, assign ownership, and define operational responsibilities.'
-    },
-    {
-      step: '02',
-      title: 'Launch Events',
-      text: 'Publish event schedules, collect registrations, and coordinate execution checkpoints.'
-    },
-    {
-      step: '03',
-      title: 'Track Accountability',
-      text: 'Monitor tasks, attendance metrics, and completion quality in real time.'
-    },
-    {
-      step: '04',
-      title: 'Publish Outcomes',
-      text: 'Share announcements and results in a presentation-ready dashboard for review.'
-    }
-  ];
-
-  moduleHighlights = [
-    'Role-based dashboards',
-    'Reactive auth forms',
-    'Event and committee operations',
-    'Task and attendance analytics',
-    'Announcement broadcast center',
-    'JWT-secured frontend routing'
   ];
 }

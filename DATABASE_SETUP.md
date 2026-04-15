@@ -42,6 +42,19 @@ To quickly populate Events, Tasks, Attendance, and Announcements for demo:
 psql -U postgres -h localhost -d committees_db -f seed_demo_v2.sql
 ```
 
+## 3.1) Enforce single ADMIN account (existing databases)
+
+If your database already has multiple ADMIN rows in `login`, run:
+
+```bash
+psql -U postgres -h localhost -d committees_db -f enforce_single_admin.sql
+```
+
+What this does:
+- Keeps the oldest ADMIN account (smallest `login_id`)
+- Converts other ADMIN rows to FACULTY
+- Adds a DB-level partial unique index so only one ADMIN can exist
+
 ## 4) Configure backend connection
 
 Edit src/main/resources/application.properties:
@@ -88,3 +101,4 @@ Fix: update username/password values to match local PostgreSQL.
 
 - The old committee_chat table is no longer part of the active model.
 - Use seed_demo_v2.sql for project/viva demonstration data.
+- Fresh schema installs also enforce one ADMIN at DB level via `uq_login_single_admin_role`.

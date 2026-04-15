@@ -3,6 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Announcement } from '../../../models/announcement.model';
 import { AnnouncementService } from '../../../services/announcement.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-announcement-create',
@@ -22,7 +23,11 @@ export class AnnouncementCreateComponent {
     userId: [1]
   });
 
-  constructor(private announcementService: AnnouncementService, private router: Router) {}
+  constructor(
+    private announcementService: AnnouncementService,
+    private notificationService: NotificationService,
+    private router: Router
+  ) {}
 
   onSubmit(): void {
     if (this.announcementForm.invalid) {
@@ -35,11 +40,24 @@ export class AnnouncementCreateComponent {
     this.announcementService.createAnnouncement(this.announcementForm.getRawValue() as Announcement).subscribe({
       next: () => {
         this.saving = false;
+        this.notificationService.add({
+          title: 'Announcement Published',
+          message: 'Announcement published successfully.',
+          level: 'success',
+          actionRoute: '/announcements'
+        });
         this.router.navigate(['/announcements']);
       },
       error: (err) => {
         this.saving = false;
-        this.errorMessage = err?.error?.message || 'Unable to publish announcement. Check Committee ID/User ID values.';
+        const message = err?.error?.message || 'Unable to publish announcement. Check Committee ID/User ID values.';
+        this.errorMessage = message;
+        this.notificationService.add({
+          title: 'Announcement Publish Failed',
+          message,
+          level: 'error',
+          actionRoute: '/announcements/create'
+        });
       }
     });
   }

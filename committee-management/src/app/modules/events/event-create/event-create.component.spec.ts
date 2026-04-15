@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { EventCreateComponent } from './event-create.component';
 
@@ -8,7 +11,9 @@ describe('EventCreateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [EventCreateComponent]
+      declarations: [EventCreateComponent],
+      imports: [HttpClientTestingModule, RouterTestingModule],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
 
@@ -21,3 +26,6 @@ describe('EventCreateComponent', () => {
     expect(component).toBeTruthy();
   });
 });
+
+
+

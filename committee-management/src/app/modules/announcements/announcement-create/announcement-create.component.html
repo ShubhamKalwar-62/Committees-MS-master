@@ -1,25 +1,47 @@
-<section class="card shadow-sm">
-	<div class="card-body">
-		<h3 class="mb-3">Create Announcement</h3>
+<section class="space-y-4">
+	<article class="workspace-panel">
+		<div class="workspace-panel-header">
+			<div>
+				<h3 class="workspace-panel-title">Create Announcement</h3>
+				<p class="workspace-panel-subtitle">Publish notices to keep committees and students informed.</p>
+			</div>
+			<a routerLink="/announcements" class="workspace-btn-secondary">Back To Announcements</a>
+		</div>
+
 		<form [formGroup]="announcementForm" (ngSubmit)="onSubmit()">
-			<div class="mb-3">
-				<label class="form-label">Message</label>
-				<textarea class="form-control" rows="4" formControlName="message"></textarea>
-			</div>
-			<div class="row g-3">
-				<div class="col-md-6">
-					<label class="form-label">Committee ID</label>
-					<input class="form-control" type="number" formControlName="committeeId" />
-				</div>
-				<div class="col-md-6">
-					<label class="form-label">User ID</label>
-					<input class="form-control" type="number" formControlName="userId" />
+			<div class="workspace-form-grid">
+				<div>
+					<label class="workspace-label">Message</label>
+					<textarea class="workspace-textarea" formControlName="message"></textarea>
+					<p *ngIf="announcementForm.controls.message.touched && announcementForm.controls.message.invalid" class="workspace-helper-text text-rose-600">
+						Announcement message should contain at least 5 characters.
+					</p>
 				</div>
 			</div>
-			<p *ngIf="errorMessage" class="text-danger mt-3 mb-0">{{ errorMessage }}</p>
-			<div class="mt-3">
-				<app-reusable-button [type]="'submit'" [disabled]="saving" [label]="saving ? 'Saving...' : 'Publish Announcement'"></app-reusable-button>
+
+			<div class="workspace-form-grid two-col mt-3">
+				<div>
+					<label class="workspace-label">Committee ID</label>
+					<input class="workspace-input" type="number" formControlName="committeeId" />
+				</div>
+
+				<div>
+					<label class="workspace-label">User ID</label>
+					<input class="workspace-input" type="number" formControlName="userId" />
+				</div>
+			</div>
+
+			<p *ngIf="errorMessage" class="workspace-error">{{ errorMessage }}</p>
+
+			<div class="workspace-action-row">
+				<button
+					type="submit"
+					[disabled]="saving"
+					class="workspace-btn-primary disabled:cursor-not-allowed disabled:opacity-65"
+				>
+					{{ saving ? 'Saving...' : 'Publish Announcement' }}
+				</button>
 			</div>
 		</form>
-	</div>
+	</article>
 </section>

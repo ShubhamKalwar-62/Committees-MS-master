@@ -208,6 +208,8 @@ CREATE TABLE attendance (
 
 -- Indexes
 CREATE INDEX idx_login_role_id ON login(role_id);
+CREATE UNIQUE INDEX uq_login_single_admin_role ON login ((lower(trim(role))))
+WHERE lower(trim(role)) = 'admin';
 CREATE INDEX idx_users_login_id ON users(login_id);
 CREATE INDEX idx_committee_head_id ON committee(head_id);
 CREATE INDEX idx_committee_login_id ON committee(login_id);
