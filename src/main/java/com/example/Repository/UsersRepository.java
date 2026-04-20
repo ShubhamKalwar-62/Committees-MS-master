@@ -1,17 +1,21 @@
 package com.example.Repository;
 
-import com.example.Entity.Users;
-import com.example.Entity.Login;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.Entity.Login;
+import com.example.Entity.Users;
 
 @Repository
 public interface UsersRepository extends JpaRepository<Users, Integer> {
+
+    @Query("SELECT u FROM Users u JOIN FETCH u.login l LEFT JOIN FETCH l.roleRef")
+    List<Users> findAllWithLogin();
     
     List<Users> findByLogin(Login login);
     
