@@ -18,8 +18,26 @@ export class TaskService {
     );
   }
 
+  getTasksByAssignedUser(userId: number): Observable<Task[]> {
+    return this.http.get<ApiResponse<unknown[]>>(`${this.apiUrl}/assigned/${userId}`).pipe(
+      map((res) => (res.data || []).map((item) => this.mapTask(item)))
+    );
+  }
+
+  getTaskById(id: number): Observable<Task> {
+    return this.http.get<ApiResponse<unknown>>(`${this.apiUrl}/${id}`).pipe(
+      map((res) => this.mapTask(res.data))
+    );
+  }
+
   createTask(payload: Task): Observable<Task> {
     return this.http.post<ApiResponse<unknown>>(this.apiUrl, this.mapCreatePayload(payload)).pipe(
+      map((res) => this.mapTask(res.data))
+    );
+  }
+
+  markTaskAsComplete(id: number): Observable<Task> {
+    return this.http.patch<ApiResponse<unknown>>(`${this.apiUrl}/${id}/complete`, {}).pipe(
       map((res) => this.mapTask(res.data))
     );
   }
@@ -34,9 +52,10 @@ export class TaskService {
       priority?: string;
       startDate?: string;
       endDate?: string;
-      committee?: { committeeId?: number };
-      assignedTo?: { userId?: number };
-      createdBy?: { userId?: number };
+      createdAt?: string;
+      committee?: { committeeId?: number; committeeName?: string };
+      assignedTo?: { userId?: number; name?: string };
+      createdBy?: { userId?: number; name?: string };
     };
 
     return {
@@ -47,9 +66,13 @@ export class TaskService {
       priority: data.priority,
       startDate: data.startDate,
       endDate: data.endDate,
+      createdAt: data.createdAt,
       committeeId: data.committee?.committeeId,
+      committeeName: data.committee?.committeeName,
       assignedToId: data.assignedTo?.userId,
-      createdById: data.createdBy?.userId
+      assignedToName: data.assignedTo?.name,
+      createdById: data.createdBy?.userId,
+      createdByName: data.createdBy?.name
     };
   }
 
@@ -61,8 +84,8 @@ export class TaskService {
       priority: payload.priority || 'MEDIUM',
       startDate: payload.startDate,
       endDate: payload.endDate,
-      committee: { committeeId: payload.committeeId ?? 1 },
-      createdBy: { userId: payload.createdById ?? 1 },
+      committee: { committeeId: payload.committeeId },
+      createdBy: { userId: payload.createdById },
       ...(payload.assignedToId ? { assignedTo: { userId: payload.assignedToId } } : {})
     };
   }

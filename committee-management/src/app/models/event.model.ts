@@ -8,4 +8,8 @@ export interface Event {
   maxParticipants?: number;
   committeeId?: number;
   categoryId?: number;
+  registrationId?: number;
+  registrationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  registeredAt?: string;
+  approvedAt?: string | null;
 }

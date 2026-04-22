@@ -10,6 +10,7 @@ export class AuthService {
   private readonly apiUrl = 'http://localhost:8080/api/auth';
   private readonly loginApiUrl = 'http://localhost:8080/api/login';
   private readonly roleKey = 'role';
+  private readonly tokenKey = 'token';
 
   constructor(private http: HttpClient) {}
 
@@ -31,10 +32,10 @@ export class AuthService {
             return;
           }
 
-          localStorage.setItem('token', res.token);
-          const roleFromPayload = res.role || this.extractRoleFromJwt(res.token);
+          localStorage.setItem(this.tokenKey, res.token);
+          const roleFromPayload = this.normalizeRole(res.role || this.extractRoleFromJwt(res.token));
           if (roleFromPayload) {
-            localStorage.setItem(this.roleKey, roleFromPayload.toUpperCase());
+            localStorage.setItem(this.roleKey, roleFromPayload);
           }
         })
       );
@@ -73,26 +74,58 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.roleKey);
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return this.hasValidToken();
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  hasValidToken(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+
+    return true;
+  }
+
+  isTokenExpired(token: string): boolean {
+    const payload = this.decodeJwtPayload(token);
+    const exp = Number(payload?.['exp']);
+    if (!Number.isFinite(exp) || exp <= 0) {
+      return true;
+    }
+
+    return Date.now() >= exp * 1000;
   }
 
   getCurrentRole(): string {
-    const storedRole = (localStorage.getItem(this.roleKey) || '').toUpperCase();
+    if (!this.hasValidToken()) {
+      return '';
+    }
+
+    const storedRole = this.normalizeRole(localStorage.getItem(this.roleKey) || '');
     if (storedRole) {
       return storedRole;
     }
 
-    const token = localStorage.getItem('token');
+    const token = this.getToken();
     if (!token) {
       return '';
     }
 
-    const decodedRole = this.extractRoleFromJwt(token).toUpperCase();
+    const decodedRole = this.normalizeRole(this.extractRoleFromJwt(token));
     if (decodedRole) {
       localStorage.setItem(this.roleKey, decodedRole);
     }
@@ -142,12 +175,36 @@ export class AuthService {
   }
 
   private extractRoleFromJwt(token: string): string {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const authority = Array.isArray(payload?.authorities) ? payload.authorities[0] : '';
-      return payload?.role || authority || '';
-    } catch {
+    const payload = this.decodeJwtPayload(token);
+    if (!payload) {
       return '';
+    }
+
+    const authority = Array.isArray(payload['authorities']) ? String(payload['authorities'][0] || '') : '';
+    return String(payload['role'] || authority || '');
+  }
+
+  private normalizeRole(rawRole: string): string {
+    const normalized = (rawRole || '').trim().toUpperCase();
+    if (!normalized) {
+      return '';
+    }
+
+    return normalized.startsWith('ROLE_') ? normalized.slice(5) : normalized;
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length < 2) {
+        return null;
+      }
+
+      const base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      return JSON.parse(atob(padded)) as Record<string, unknown>;
+    } catch {
+      return null;
     }
   }
 }

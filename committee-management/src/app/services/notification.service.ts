@@ -37,25 +37,6 @@ export class NotificationService {
     return this.notificationsSubject.value.filter((item) => !item.read).length;
   }
 
-  seedDefaultsForRole(role: string): void {
-    if (this.notificationsSubject.value.length > 0) {
-      return;
-    }
-
-    const roleLabel = role || 'USER';
-    this.add({
-      title: 'Welcome Back',
-      message: `You are signed in as ${roleLabel}.`,
-      level: 'info'
-    });
-
-    this.add({
-      title: 'Tip',
-      message: 'Use the notification panel to track important updates.',
-      level: 'success'
-    });
-  }
-
   add(input: CreateNotificationInput): AppNotification {
     const item: AppNotification = {
       id: this.generateId(),
