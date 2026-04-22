@@ -5,6 +5,8 @@
 DROP TABLE IF EXISTS attendance CASCADE;
 DROP TABLE IF EXISTS event_media CASCADE;
 DROP TABLE IF EXISTS event_feedback CASCADE;
+DROP TABLE IF EXISTS event_qr_session CASCADE;
+DROP TABLE IF EXISTS event_registrations CASCADE;
 DROP TABLE IF EXISTS event_participants CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS event_category CASCADE;
@@ -42,6 +44,8 @@ CREATE TABLE login (
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    role VARCHAR(100) DEFAULT 'USER',
     login_id INTEGER NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -102,10 +106,15 @@ CREATE TABLE events (
 CREATE TABLE announcements (
     announcement_id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
+    announcement_type VARCHAR(20) NOT NULL DEFAULT 'general',
+    reference_id INTEGER,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    is_important BOOLEAN NOT NULL DEFAULT FALSE,
     committee_id INTEGER NOT NULL,
     created_by INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_announcements_type CHECK (announcement_type IN ('event', 'task', 'general')),
     CONSTRAINT fk_announcements_committee FOREIGN KEY (committee_id) REFERENCES committee(committee_id) ON DELETE CASCADE,
     CONSTRAINT fk_announcements_created_by FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
 );
@@ -134,25 +143,40 @@ CREATE TABLE task (
     CONSTRAINT ck_task_priority CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT'))
 );
 
--- 9) Event Participants
-CREATE TABLE event_participants (
+-- 9) Event Registrations
+CREATE TABLE event_registrations (
     ep_id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     event_id INTEGER NOT NULL,
 
-    -- Legacy columns retained for existing participant APIs
-    status VARCHAR(20) DEFAULT 'REGISTERED',
-    attended BOOLEAN DEFAULT FALSE,
+    -- Registration workflow
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approved_at TIMESTAMP,
+
+    -- Legacy column retained for compatibility
+    attended BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_event_participants_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_event_participants_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
-    CONSTRAINT uq_event_participants UNIQUE (user_id, event_id),
-    CONSTRAINT ck_event_participants_status CHECK (status IN ('REGISTERED', 'CONFIRMED', 'CANCELLED', 'ATTENDED'))
+    CONSTRAINT fk_event_registrations_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_registrations_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+    CONSTRAINT uq_event_registrations UNIQUE (user_id, event_id),
+    CONSTRAINT ck_event_registrations_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
 );
 
--- 10) Event Feedback
+-- 10) Event QR Attendance Session
+CREATE TABLE event_qr_session (
+    qr_session_id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    qr_token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ended_at TIMESTAMP,
+
+    CONSTRAINT fk_event_qr_session_event FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE
+);
+
+-- 11) Event Feedback
 CREATE TABLE event_feedback (
     feedback_id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
@@ -169,7 +193,7 @@ CREATE TABLE event_feedback (
     CONSTRAINT uq_event_feedback UNIQUE (user_id, event_id)
 );
 
--- 11) Event Media
+-- 12) Event Media
 CREATE TABLE event_media (
     media_id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL,
@@ -185,7 +209,7 @@ CREATE TABLE event_media (
     CONSTRAINT ck_event_media_type CHECK (media_type IN ('IMAGE', 'VIDEO', 'DOCUMENT', 'AUDIO'))
 );
 
--- 12) Attendance
+-- 13) Attendance
 CREATE TABLE attendance (
     attendance_id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
@@ -211,6 +235,7 @@ CREATE INDEX idx_login_role_id ON login(role_id);
 CREATE UNIQUE INDEX uq_login_single_admin_role ON login ((lower(trim(role))))
 WHERE lower(trim(role)) = 'admin';
 CREATE INDEX idx_users_login_id ON users(login_id);
+CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_committee_head_id ON committee(head_id);
 CREATE INDEX idx_committee_login_id ON committee(login_id);
 CREATE INDEX idx_events_committee_id ON events(committee_id);
@@ -219,12 +244,40 @@ CREATE INDEX idx_announcements_committee_id ON announcements(committee_id);
 CREATE INDEX idx_announcements_created_by ON announcements(created_by);
 CREATE INDEX idx_task_committee_id ON task(committee_id);
 CREATE INDEX idx_task_assigned_to ON task(assigned_to);
-CREATE INDEX idx_event_participants_event_id ON event_participants(event_id);
-CREATE INDEX idx_event_participants_user_id ON event_participants(user_id);
+CREATE INDEX idx_event_registrations_event_id ON event_registrations(event_id);
+CREATE INDEX idx_event_registrations_user_id ON event_registrations(user_id);
+CREATE INDEX idx_event_registrations_status ON event_registrations(status);
+CREATE INDEX idx_event_qr_session_event_id ON event_qr_session(event_id);
+CREATE INDEX idx_event_qr_session_expires_at ON event_qr_session(expires_at);
 CREATE INDEX idx_event_feedback_event_id ON event_feedback(event_id);
 CREATE INDEX idx_event_media_event_id ON event_media(event_id);
 CREATE INDEX idx_attendance_event_id ON attendance(event_id);
 CREATE INDEX idx_attendance_user_id ON attendance(user_id);
+
+-- Keep users.email and users.role synchronized with login for compatibility
+CREATE OR REPLACE FUNCTION sync_users_identity_from_login()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.login_id IS NOT NULL THEN
+        SELECT l.email, COALESCE(l.role, 'USER')
+        INTO NEW.email, NEW.role
+        FROM login l
+        WHERE l.login_id = NEW.login_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sync_users_identity_on_login_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE users
+    SET email = NEW.email,
+        role = COALESCE(NEW.role, 'USER')
+    WHERE login_id = NEW.login_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Trigger for updated_at maintenance
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -244,9 +297,11 @@ CREATE TRIGGER update_task_updated_at BEFORE UPDATE ON task FOR EACH ROW EXECUTE
 CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_event_category_updated_at BEFORE UPDATE ON event_category FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_event_participants_updated_at BEFORE UPDATE ON event_participants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_registrations_updated_at BEFORE UPDATE ON event_registrations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_event_feedback_updated_at BEFORE UPDATE ON event_feedback FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_event_media_updated_at BEFORE UPDATE ON event_media FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_users_identity_from_login BEFORE INSERT OR UPDATE OF login_id ON users FOR EACH ROW EXECUTE FUNCTION sync_users_identity_from_login();
+CREATE TRIGGER update_login_identity_into_users AFTER UPDATE OF email, role ON login FOR EACH ROW EXECUTE FUNCTION sync_users_identity_on_login_update();
 
 -- Seed roles
 INSERT INTO roles (role_name) VALUES ('ADMIN'), ('FACULTY'), ('STUDENT');
