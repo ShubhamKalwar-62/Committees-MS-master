@@ -3,21 +3,38 @@
 		<div class="workspace-panel-header">
 			<div>
 				<h3 class="workspace-panel-title">Mark Attendance</h3>
-				<p class="workspace-panel-subtitle">Record presence status and optional check-in context for each participant.</p>
+				<p class="workspace-panel-subtitle">Record attendance using real users and events from the database.</p>
 			</div>
 			<a routerLink="/attendance" class="workspace-btn-secondary">Back To Attendance</a>
+		</div>
+
+		<div *ngIf="loadingOptions" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+			<div class="inline-flex items-center gap-2">
+				<span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600"></span>
+				Loading users and events...
+			</div>
 		</div>
 
 		<form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()">
 			<div class="workspace-form-grid two-col">
 				<div>
-					<label class="workspace-label">User ID</label>
-					<input type="number" class="workspace-input" formControlName="userId" />
+					<label class="workspace-label">Select User</label>
+					<select class="workspace-select" formControlName="userId" [disabled]="loadingOptions || !users.length">
+						<option [ngValue]="null">Select a user</option>
+						<option *ngFor="let user of users" [ngValue]="user.id">
+							{{ user.name }}{{ user.email ? (' (' + user.email + ')') : '' }}
+						</option>
+					</select>
 				</div>
 
 				<div>
-					<label class="workspace-label">Event ID</label>
-					<input type="number" class="workspace-input" formControlName="eventId" [readonly]="eventLocked" />
+					<label class="workspace-label">Select Event</label>
+					<select class="workspace-select" formControlName="eventId" [disabled]="loadingOptions || !events.length || eventLocked">
+						<option [ngValue]="null">Select an event</option>
+						<option *ngFor="let event of events" [ngValue]="event.id">
+							{{ getEventLabel(event) }}
+						</option>
+					</select>
 					<p *ngIf="eventLocked" class="workspace-helper-text">Event selected from Events page.</p>
 				</div>
 
@@ -45,8 +62,17 @@
 
 			<div class="workspace-action-row">
 				<button
+					type="button"
+					[disabled]="loadingOptions || markAllSaving || !canMarkAllPresent"
+					class="workspace-btn-secondary disabled:cursor-not-allowed disabled:opacity-65"
+					(click)="onMarkAllPresent()"
+				>
+					{{ markAllSaving ? 'Marking All...' : 'Mark All Present' }}
+				</button>
+
+				<button
 					type="submit"
-					[disabled]="saving"
+					[disabled]="loadingOptions || saving"
 					class="workspace-btn-primary disabled:cursor-not-allowed disabled:opacity-65"
 				>
 					{{ saving ? 'Saving...' : 'Mark Attendance' }}

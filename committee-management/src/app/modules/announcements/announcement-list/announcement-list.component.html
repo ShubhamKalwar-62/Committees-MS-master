@@ -37,25 +37,112 @@
 		</p>
 	</article>
 
-	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-		<article
-			*ngFor="let announcement of announcements"
-			class="announcement-card group rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition-all"
-		>
-			<div class="mb-3 flex items-center justify-between gap-2">
-				<p class="mb-0 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
-					Notice
-				</p>
-				<span class="material-icons text-[18px] text-slate-300 transition-colors group-hover:text-blue-500">campaign</span>
+	<div *ngIf="loading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+		<div class="inline-flex items-center gap-2">
+			<span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600"></span>
+			Loading announcements...
+		</div>
+	</div>
+
+	<div *ngIf="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+		{{ errorMessage }}
+	</div>
+
+	<div *ngIf="!loading && !errorMessage">
+		<ng-container *ngIf="announcements.length > 0; else emptyAnnouncementsState">
+			<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				<article
+					*ngFor="let announcement of announcements"
+					class="announcement-card group rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition-all"
+					[ngClass]="{ 'announcement-unread': !announcement.read }"
+				>
+					<div class="mb-3 flex items-center justify-between gap-2">
+						<p class="mb-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]" [ngClass]="getTypeChipClasses(announcement)">
+							{{ getTypeLabel(announcement) }}
+						</p>
+						<div class="flex items-center gap-1.5">
+							<span *ngIf="announcement.important" class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-rose-700">
+								Important
+							</span>
+							<span class="material-icons text-[18px] text-slate-300 transition-colors group-hover:text-blue-500">campaign</span>
+						</div>
+					</div>
+
+					<h3 class="mb-2 text-base font-semibold text-slate-800">{{ getAnnouncementTitle(announcement.message) }}</h3>
+					<p class="mb-4 text-sm leading-relaxed text-slate-600">{{ getAnnouncementPreview(announcement.message) }}</p>
+
+					<div class="mb-4 flex flex-wrap items-center gap-2">
+						<p class="mb-0 inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">{{ formatDate(announcement.createdAt) }}</p>
+						<span class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-semibold" [ngClass]="announcement.read ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
+							{{ announcement.read ? 'Read' : 'Unread' }}
+						</span>
+					</div>
+
+					<div class="flex flex-wrap items-center gap-2">
+						<button
+							type="button"
+							class="announcement-action-btn primary"
+							[disabled]="!hasActionTarget(announcement)"
+							(click)="onActionClick(announcement)"
+						>
+							{{ getCtaLabel(announcement) }}
+						</button>
+						<button
+							type="button"
+							class="announcement-action-btn"
+							[disabled]="announcement.read"
+							(click)="markAsRead(announcement)"
+						>
+							{{ announcement.read ? 'Already Read' : 'Mark As Read' }}
+						</button>
+					</div>
+				</article>
+			</div>
+		</ng-container>
+
+		<ng-template #emptyAnnouncementsState>
+			<app-empty-state
+				icon="campaign"
+				title="No announcements available"
+				subtitle="New announcements will appear here once published"
+				[actionLabel]="canCreateAnnouncement ? 'Create Announcement' : ''"
+				actionRoute="/announcements/create"
+			></app-empty-state>
+		</ng-template>
+	</div>
+
+	<div *ngIf="activeGeneralAnnouncement" class="announcement-modal-backdrop" (click)="closeGeneralAnnouncementModal()">
+		<section class="announcement-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Announcement details">
+			<header class="mb-3 flex items-start justify-between gap-3">
+				<div>
+					<p class="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-blue-600">General Announcement</p>
+					<h3 class="mb-0 text-lg font-semibold text-slate-800">{{ getAnnouncementTitle(activeGeneralAnnouncement.message) }}</h3>
+				</div>
+				<button type="button" class="announcement-modal-close" (click)="closeGeneralAnnouncementModal()" aria-label="Close announcement details">
+					<span class="material-icons text-[18px]">close</span>
+				</button>
+			</header>
+
+			<p class="whitespace-pre-line text-sm leading-relaxed text-slate-700">{{ activeGeneralAnnouncement.message }}</p>
+
+			<div class="mt-4 flex flex-wrap items-center gap-2">
+				<span class="inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">{{ formatDate(activeGeneralAnnouncement.createdAt) }}</span>
+				<span *ngIf="activeGeneralAnnouncement.important" class="inline-flex items-center rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700">
+					Important
+				</span>
 			</div>
 
-			<h3 class="mb-2 text-base font-semibold text-slate-800">{{ getAnnouncementTitle(announcement.message) }}</h3>
-			<p class="mb-4 text-sm leading-relaxed text-slate-600">{{ getAnnouncementPreview(announcement.message) }}</p>
-			<p class="mb-0 inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">{{ formatDate(announcement.createdAt) }}</p>
-		</article>
-
-		<div *ngIf="!announcements.length" class="col-span-full rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm">
-			No announcements available at the moment.
-		</div>
+			<div class="mt-5 flex flex-wrap items-center justify-end gap-2">
+				<button type="button" class="announcement-action-btn" (click)="closeGeneralAnnouncementModal()">Close</button>
+				<button
+					type="button"
+					class="announcement-action-btn primary"
+					[disabled]="activeGeneralAnnouncement.read"
+					(click)="markAsRead(activeGeneralAnnouncement)"
+				>
+					{{ activeGeneralAnnouncement.read ? 'Already Read' : 'Mark As Read' }}
+				</button>
+			</div>
+		</section>
 	</div>
 </section>

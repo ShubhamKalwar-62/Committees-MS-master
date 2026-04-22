@@ -6,6 +6,7 @@ import { EventsRoutingModule } from './events-routing.module';
 import { EventListComponent } from './event-list/event-list.component';
 import { EventDetailComponent } from './event-detail/event-detail.component';
 import { EventCreateComponent } from './event-create/event-create.component';
+import { PendingRegistrationsComponent } from './pending-registrations/pending-registrations.component';
 import { SharedModule } from '../../shared/shared.module';
 
 
@@ -13,7 +14,8 @@ import { SharedModule } from '../../shared/shared.module';
   declarations: [
     EventListComponent,
     EventDetailComponent,
-    EventCreateComponent
+    EventCreateComponent,
+    PendingRegistrationsComponent
   ],
   imports: [
     CommonModule,

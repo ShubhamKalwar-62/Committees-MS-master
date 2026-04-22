@@ -1,0 +1,32 @@
+.task-detail-panel {
+	background: linear-gradient(180deg, #ffffff, #fbfdff);
+}
+
+.detail-meta-card {
+	border: 1px solid #e2e8f0;
+	border-radius: 0.85rem;
+	background: #f8fafc;
+	padding: 0.75rem;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.detail-meta-card:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.detail-meta-label {
+	margin: 0;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #64748b;
+}
+
+.detail-meta-value {
+	margin: 0.3rem 0 0;
+	font-size: 0.94rem;
+	font-weight: 600;
+	color: #1e293b;
+}

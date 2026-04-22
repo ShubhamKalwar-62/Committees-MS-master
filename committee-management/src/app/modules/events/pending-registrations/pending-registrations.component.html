@@ -1,0 +1,113 @@
+<section class="w-full space-y-5">
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="page-header-title">Pending Registrations</h2>
+        <p class="page-header-subtitle">Approve or reject event registration requests from students.</p>
+      </div>
+
+      <a
+        routerLink="/events"
+        class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 no-underline shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+      >
+        Back To Events
+      </a>
+    </div>
+  </div>
+
+  <article class="rounded-2xl bg-gradient-to-r from-slate-900 via-emerald-800 to-teal-700 p-5 text-white shadow-lg">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="mb-1 text-xs font-semibold uppercase tracking-[0.13em] text-emerald-100">Approval Queue</p>
+        <h3 class="mb-0 text-xl font-bold">Registration Review Panel</h3>
+      </div>
+      <span class="inline-flex items-center rounded-xl border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-emerald-50">
+        {{ pendingRegistrations.length }} Pending
+      </span>
+    </div>
+
+    <p class="mb-0 mt-4 text-sm text-emerald-50">
+      Review each request before students can use QR attendance for the event.
+    </p>
+  </article>
+
+  <div *ngIf="isLoading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+    <div class="inline-flex items-center gap-2">
+      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600"></span>
+      Loading pending registrations...
+    </div>
+  </div>
+
+  <p *ngIf="errorMessage" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+    {{ errorMessage }}
+  </p>
+
+  <div *ngIf="!isLoading && !errorMessage">
+    <ng-container *ngIf="pendingRegistrations.length > 0; else emptyPendingState">
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto border-collapse">
+            <thead class="bg-slate-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <th class="px-4 py-3">Student</th>
+                <th class="px-4 py-3">Event</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Requested At</th>
+                <th class="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+              <tr *ngFor="let item of pendingRegistrations" class="pending-row transition-colors">
+                <td class="px-4 py-3.5">
+                  <p class="mb-0 font-medium text-slate-800">{{ item.userName || ('User #' + item.userId) }}</p>
+                  <p class="mb-0 text-xs text-slate-500">{{ item.userEmail || 'Email unavailable' }}</p>
+                </td>
+                <td class="px-4 py-3.5">
+                  <p class="mb-0 font-medium text-slate-800">{{ item.eventName || ('Event #' + item.eventId) }}</p>
+                  <p class="mb-0 text-xs text-slate-500">{{ item.eventDate ? formatDate(item.eventDate) : 'Date not available' }}</p>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span
+                    class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase"
+                    [ngClass]="getRegistrationStatusBadgeClass(item.status)"
+                  >
+                    {{ getRegistrationStatusLabel(item.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3.5 text-slate-600">{{ formatDate(item.registeredAt) }}</td>
+                <td class="px-4 py-3.5">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-65"
+                      [disabled]="isActionInProgress(item.id)"
+                      (click)="approveRegistration(item)"
+                    >
+                      {{ isActionInProgress(item.id) ? 'Working...' : 'Approve' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-65"
+                      [disabled]="isActionInProgress(item.id)"
+                      (click)="rejectRegistration(item)"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #emptyPendingState>
+      <app-empty-state
+        icon="fact_check"
+        title="No pending registrations"
+        subtitle="New registration requests will appear here"
+      ></app-empty-state>
+    </ng-template>
+  </div>
+</section>

@@ -1,0 +1,8 @@
+.scanner-view {
+  min-height: 320px;
+}
+
+.scanner-view video,
+.scanner-view canvas {
+  border-radius: 0.75rem;
+}

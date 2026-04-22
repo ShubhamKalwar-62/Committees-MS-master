@@ -3,26 +3,64 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h2 class="page-header-title">Attendance</h2>
-				<p class="page-header-subtitle">Monitor event participation and check-in records.</p>
-				<p *ngIf="selectedEventId" class="mb-0 mt-1 text-xs font-medium text-blue-600">Showing records for Event ID {{ selectedEventId }}</p>
+				<p class="page-header-subtitle">Monitor attendance with real user and event relationships.</p>
+				<p *ngIf="selectedEventLabel" class="mb-0 mt-1 text-xs font-medium text-blue-600">Showing records for {{ selectedEventLabel }}</p>
 			</div>
 
 			<div class="flex flex-wrap gap-2">
 				<a
 					*ngIf="canMarkAttendance"
-					routerLink="/attendance/mark"
+					[routerLink]="[attendanceBaseRoute, 'mark']"
 					[queryParams]="selectedEventId ? { eventId: selectedEventId } : {}"
 					class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:text-white"
 				>
 					Mark Attendance
 				</a>
+
 				<a
-					*ngIf="selectedEventId"
-					routerLink="/attendance"
-					class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-slate-50 hover:text-slate-800"
+					*ngIf="canManageQrSession"
+					[routerLink]="[attendanceBaseRoute, 'qr-session']"
+					class="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline shadow-sm transition-colors hover:bg-emerald-100"
 				>
-					Clear Filter
+					Start QR Session
 				</a>
+
+				<a
+					*ngIf="canScanQrAttendance"
+					[routerLink]="[attendanceBaseRoute, 'scan']"
+					class="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:bg-cyan-700 hover:text-white"
+				>
+					Scan QR
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+			<div>
+				<label class="workspace-label">Filter By Event</label>
+				<select class="workspace-select" [value]="selectedEventId || ''" (change)="onEventFilterChange($event)">
+					<option value="">All Events</option>
+					<option *ngFor="let event of events" [value]="event.id">
+						{{ getEventOptionLabel(event) }}
+					</option>
+				</select>
+			</div>
+
+			<div>
+				<label class="workspace-label">From Date</label>
+				<input type="date" class="workspace-input" [value]="startDate" (change)="onStartDateChange($event)" />
+			</div>
+
+			<div>
+				<label class="workspace-label">To Date</label>
+				<input type="date" class="workspace-input" [value]="endDate" (change)="onEndDateChange($event)" />
+			</div>
+
+			<div class="flex items-end gap-2">
+				<button type="button" class="workspace-btn-primary" (click)="applyFilters()">Apply</button>
+				<button type="button" class="workspace-btn-secondary" (click)="clearFilters()">Clear</button>
 			</div>
 		</div>
 	</div>
@@ -39,47 +77,74 @@
 		</div>
 
 		<p class="mb-0 mt-4 text-sm text-cyan-50">
-			{{ selectedEventId ? ('Focused view for Event ID ' + selectedEventId) : 'Showing attendance records across events.' }}
+			{{ selectedEventLabel ? ('Focused view for ' + selectedEventLabel) : 'Showing attendance records across events.' }}
+			<span *ngIf="startDate || endDate" class="ml-1">Date filter is active.</span>
 		</p>
 	</article>
 
-	<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
-		<div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-			<h4 class="panel-title mb-0">Attendance Records</h4>
-			<span class="inline-flex items-center rounded-xl bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.11em] text-slate-600">Live Feed</span>
+	<div *ngIf="isLoading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+		<div class="inline-flex items-center gap-2">
+			<span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600"></span>
+			Loading attendance records...
 		</div>
+	</div>
 
-		<div class="overflow-x-auto">
-			<table class="min-w-full table-auto border-collapse">
-				<thead class="bg-slate-50">
-					<tr class="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-						<th class="px-4 py-3">User ID</th>
-						<th class="px-4 py-3">Event ID</th>
-						<th class="px-4 py-3">Status</th>
-						<th class="px-4 py-3">Check In</th>
-						<th class="px-4 py-3">Remarks</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-slate-100 text-sm text-slate-700">
-					<tr *ngFor="let item of records" class="attendance-row transition-colors">
-						<td class="px-4 py-3.5 font-medium">{{ item.userId }}</td>
-						<td class="px-4 py-3.5 font-medium">{{ item.eventId }}</td>
-						<td class="px-4 py-3.5">
-							<span
-								class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase"
-								[ngClass]="getAttendanceStatusBadgeClass(item.status)"
-							>
-								{{ item.status || 'UNKNOWN' }}
-							</span>
-						</td>
-						<td class="px-4 py-3.5 text-slate-600">{{ formatDateTime(item.checkInTime) }}</td>
-						<td class="px-4 py-3.5 text-slate-600">{{ item.remarks || '-' }}</td>
-					</tr>
-					<tr *ngIf="!records.length">
-						<td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500">No attendance records available.</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div *ngIf="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+		{{ errorMessage }}
+	</div>
+
+	<div *ngIf="!isLoading && !errorMessage">
+		<ng-container *ngIf="records.length > 0; else emptyAttendanceState">
+			<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
+				<div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+					<h4 class="panel-title mb-0">Attendance Records</h4>
+					<span class="inline-flex items-center rounded-xl bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.11em] text-slate-600">Live Feed</span>
+				</div>
+
+				<div class="overflow-x-auto">
+					<table class="min-w-full table-auto border-collapse">
+						<thead class="bg-slate-50">
+							<tr class="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+								<th class="px-4 py-3">User Name</th>
+								<th class="px-4 py-3">Event Title</th>
+								<th class="px-4 py-3">Status</th>
+								<th class="px-4 py-3">Date / Time</th>
+								<th class="px-4 py-3">Remarks</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+							<tr *ngFor="let item of records" class="attendance-row transition-colors">
+								<td class="px-4 py-3.5">
+									<p class="mb-0 font-medium text-slate-800">{{ resolveUserName(item) }}</p>
+									<p class="mb-0 text-xs text-slate-500">User ID: {{ item.userId }}</p>
+								</td>
+								<td class="px-4 py-3.5">
+									<p class="mb-0 font-medium text-slate-800">{{ resolveEventTitle(item) }}</p>
+									<p class="mb-0 text-xs text-slate-500">Event ID: {{ item.eventId }}</p>
+								</td>
+								<td class="px-4 py-3.5">
+									<span
+										class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase"
+										[ngClass]="getAttendanceStatusBadgeClass(item.status)"
+									>
+										{{ item.status || 'UNKNOWN' }}
+									</span>
+								</td>
+								<td class="px-4 py-3.5 text-slate-600">{{ formatDateTime(item.checkInTime) }}</td>
+								<td class="px-4 py-3.5 text-slate-600">{{ item.remarks || '-' }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</ng-container>
+
+		<ng-template #emptyAttendanceState>
+			<app-empty-state
+				icon="fact_check"
+				title="No attendance records"
+				subtitle="Records will appear after event participation"
+			></app-empty-state>
+		</ng-template>
 	</div>
 </section>

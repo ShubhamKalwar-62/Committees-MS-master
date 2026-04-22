@@ -21,6 +21,41 @@
 
 			<div class="workspace-form-grid two-col mt-3">
 				<div>
+					<label class="workspace-label">Announcement Type</label>
+					<select class="workspace-select" formControlName="type">
+						<option value="general">General</option>
+						<option value="event">Event</option>
+						<option value="task">Task</option>
+					</select>
+				</div>
+
+				<div *ngIf="selectedType !== 'general'">
+					<label class="workspace-label">Reference {{ selectedType === 'event' ? 'Event' : 'Task' }}</label>
+					<select class="workspace-select" formControlName="referenceId">
+						<option [ngValue]="null">Select {{ selectedType === 'event' ? 'event' : 'task' }}</option>
+						<option *ngFor="let event of events" [ngValue]="event.id" [hidden]="selectedType !== 'event'">
+							#{{ event.id }} - {{ event.eventName }}
+						</option>
+						<option *ngFor="let task of tasks" [ngValue]="task.id" [hidden]="selectedType !== 'task'">
+							#{{ task.id }} - {{ task.title }}
+						</option>
+					</select>
+					<p *ngIf="loadingReferenceOptions" class="workspace-helper-text">Loading available references...</p>
+					<p *ngIf="announcementForm.controls.referenceId.touched && announcementForm.controls.referenceId.invalid" class="workspace-helper-text text-rose-600">
+						Reference is required for event and task announcements.
+					</p>
+				</div>
+			</div>
+
+			<div class="mt-3">
+				<label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+					<input type="checkbox" class="workspace-checkbox" formControlName="important" />
+					Mark as important
+				</label>
+			</div>
+
+			<div class="workspace-form-grid two-col mt-3">
+				<div>
 					<label class="workspace-label">Committee ID</label>
 					<input class="workspace-input" type="number" formControlName="committeeId" />
 				</div>

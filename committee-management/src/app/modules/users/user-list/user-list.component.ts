@@ -10,12 +10,25 @@ import { UserService } from '../../../services/user.service';
 })
 export class UserListComponent {
   users: User[] = [];
+  loading = true;
+  errorMessage = '';
 
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
-    this.userService.getUsers().subscribe((users) => {
-      this.users = users;
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.userService.getUsers().subscribe({
+      next: (users) => {
+        this.loading = false;
+        this.users = users || [];
+      },
+      error: () => {
+        this.loading = false;
+        this.users = [];
+        this.errorMessage = 'Unable to load users right now. Please refresh and try again.';
+      }
     });
   }
 
