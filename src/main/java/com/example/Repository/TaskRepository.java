@@ -30,6 +30,9 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     
     @Query("SELECT t FROM Task t WHERE t.assignedTo.userId = :userId AND t.status = :status")
     List<Task> findByAssignedToUserIdAndStatus(@Param("userId") Integer userId, @Param("status") Task.TaskStatus status);
+
+    @Query("SELECT t FROM Task t WHERE t.assignedTo.userId = :userId ORDER BY t.createdAt DESC")
+    List<Task> findByAssignedToUserIdOrderByCreatedAtDesc(@Param("userId") Integer userId);
     
     @Query("SELECT t FROM Task t WHERE t.endDate <= :date AND t.status != 'COMPLETED'")
     List<Task> findOverdueTasks(@Param("date") LocalDateTime date);

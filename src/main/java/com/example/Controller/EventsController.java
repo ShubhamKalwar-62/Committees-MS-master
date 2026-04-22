@@ -1,6 +1,10 @@
 package com.example.Controller;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,9 +23,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Entity.Committee;
+import com.example.Entity.EventCategory;
 import com.example.Entity.Events;
+import com.example.Exception.ResourceNotFoundException;
+import com.example.Repository.CommitteeRepository;
+import com.example.Repository.EventCategoryRepository;
 import com.example.Response.ResponceBean;
 import com.example.Service.EventsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +47,12 @@ public class EventsController {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CommitteeRepository committeeRepository;
+
+    @Autowired
+    private EventCategoryRepository eventCategoryRepository;
     
     @GetMapping
     @Operation(summary = "Get all events", description = "Retrieve all events")
@@ -88,10 +104,46 @@ public class EventsController {
     
     @PostMapping
     @Operation(summary = "Create new event", description = "Create a new event")
-    public ResponseEntity<ResponceBean<Events>> createEvent(@RequestBody Events event) {
-        Events savedEvent = eventsService.saveEvent(event);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ResponceBean.success("Event created successfully", savedEvent));
+    public ResponseEntity<ResponceBean<Events>> createEvent(@RequestBody EventCreateRequest request) {
+        try {
+            Integer committeeId = request.resolveCommitteeId();
+            if (committeeId == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResponceBean.error("committeeId is required"));
+            }
+
+            Committee committee = committeeRepository.findById(committeeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Committee not found with id: " + committeeId));
+
+            EventCategory category = null;
+            Integer categoryId = request.resolveCategoryId();
+            if (categoryId != null) {
+                category = eventCategoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Event category not found with id: " + categoryId));
+            }
+
+            if (request.getEventName() == null || request.getEventName().isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResponceBean.error("eventName is required"));
+            }
+
+            Events event = new Events();
+            event.setEventName(request.getEventName().trim());
+            event.setDescription(request.getDescription());
+            event.setEventDate(parseEventDate(request.getEventDate()));
+            event.setLocation(request.resolveLocation());
+            event.setStatus(parseEventStatus(request.getStatus()));
+            event.setMaxParticipants(request.getMaxParticipants());
+            event.setCommittee(committee);
+            event.setCategory(category);
+
+            Events savedEvent = eventsService.saveEvent(event);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ResponceBean.success("Event created successfully", savedEvent));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Invalid event payload", ex.getMessage()));
+        }
     }
     
     @PutMapping("/{id}")
@@ -118,7 +170,7 @@ public class EventsController {
             Events patched = objectMapper.updateValue(existing.get(), updates);
             Events saved = eventsService.saveEvent(patched);
             return ResponseEntity.ok(ResponceBean.success("Event patched successfully", saved));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | JsonProcessingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
         }
     }
@@ -133,5 +185,193 @@ public class EventsController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponceBean.error("Event not found"));
+    }
+
+    private LocalDateTime parseEventDate(String rawDate) {
+        if (rawDate == null || rawDate.isBlank()) {
+            return null;
+        }
+
+        String value = rawDate.trim();
+        try {
+            return LocalDateTime.parse(value);
+        } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+        } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            return OffsetDateTime.parse(value).toLocalDateTime();
+        } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            return ZonedDateTime.parse(value).toLocalDateTime();
+        } catch (DateTimeParseException ignored) {
+        }
+
+        throw new IllegalArgumentException("eventDate must be a valid ISO datetime (e.g. 2026-04-26T20:43:00)");
+    }
+
+    private Events.EventStatus parseEventStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) {
+            return Events.EventStatus.PLANNED;
+        }
+
+        try {
+            return Events.EventStatus.valueOf(rawStatus.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("status must be one of PLANNED, ONGOING, COMPLETED, CANCELLED");
+        }
+    }
+
+    public static class EventCreateRequest {
+        private String eventName;
+        private String description;
+        private String eventDate;
+        private String location;
+        private String venue;
+        private String status;
+        private Integer maxParticipants;
+        private Integer committeeId;
+        private Integer categoryId;
+        private CommitteeRef committee;
+        private CategoryRef category;
+
+        public String getEventName() {
+            return eventName;
+        }
+
+        public void setEventName(String eventName) {
+            this.eventName = eventName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getEventDate() {
+            return eventDate;
+        }
+
+        public void setEventDate(String eventDate) {
+            this.eventDate = eventDate;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public void setLocation(String location) {
+            this.location = location;
+        }
+
+        public String getVenue() {
+            return venue;
+        }
+
+        public void setVenue(String venue) {
+            this.venue = venue;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public Integer getMaxParticipants() {
+            return maxParticipants;
+        }
+
+        public void setMaxParticipants(Integer maxParticipants) {
+            this.maxParticipants = maxParticipants;
+        }
+
+        public Integer getCommitteeId() {
+            return committeeId;
+        }
+
+        public void setCommitteeId(Integer committeeId) {
+            this.committeeId = committeeId;
+        }
+
+        public Integer getCategoryId() {
+            return categoryId;
+        }
+
+        public void setCategoryId(Integer categoryId) {
+            this.categoryId = categoryId;
+        }
+
+        public CommitteeRef getCommittee() {
+            return committee;
+        }
+
+        public void setCommittee(CommitteeRef committee) {
+            this.committee = committee;
+        }
+
+        public CategoryRef getCategory() {
+            return category;
+        }
+
+        public void setCategory(CategoryRef category) {
+            this.category = category;
+        }
+
+        public Integer resolveCommitteeId() {
+            if (committeeId != null) {
+                return committeeId;
+            }
+            return committee != null ? committee.getCommitteeId() : null;
+        }
+
+        public Integer resolveCategoryId() {
+            if (categoryId != null) {
+                return categoryId;
+            }
+            return category != null ? category.getCategoryId() : null;
+        }
+
+        public String resolveLocation() {
+            if (location != null && !location.isBlank()) {
+                return location;
+            }
+            return venue;
+        }
+    }
+
+    public static class CommitteeRef {
+        private Integer committeeId;
+
+        public Integer getCommitteeId() {
+            return committeeId;
+        }
+
+        public void setCommitteeId(Integer committeeId) {
+            this.committeeId = committeeId;
+        }
+    }
+
+    public static class CategoryRef {
+        private Integer categoryId;
+
+        public Integer getCategoryId() {
+            return categoryId;
+        }
+
+        public void setCategoryId(Integer categoryId) {
+            this.categoryId = categoryId;
+        }
     }
 }

@@ -13,11 +13,13 @@ public interface TaskService {
     List<Task> getTasksByCommittee(Committee committee);
     List<Task> getTasksByCreatedBy(Users createdBy);
     List<Task> getTasksByAssignedTo(Users assignedTo);
+    List<Task> getTasksByAssignedUserId(Integer userId);
     List<Task> getTasksByStatus(Task.TaskStatus status);
     List<Task> getTasksByPriority(Task.TaskPriority priority);
     List<Task> getOverdueTasks();
     List<Task> getTasksByCommitteeId(Integer committeeId);
     Task saveTask(Task task);
+    Task markTaskAsComplete(Integer id, String requesterEmail);
     void deleteTask(Integer id);
     Task updateTask(Integer id, Task taskDetails);
 }

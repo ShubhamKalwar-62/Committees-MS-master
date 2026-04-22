@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Entity.Committee;
 import com.example.Response.ResponceBean;
 import com.example.Service.CommitteeService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -100,7 +101,7 @@ public class CommitteeController {
             Committee patched = objectMapper.updateValue(existing.get(), updates);
             Committee saved = committeeService.saveCommittee(patched);
             return ResponseEntity.ok(ResponceBean.success("Committee patched successfully", saved));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | JsonProcessingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
         }
     }

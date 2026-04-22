@@ -1,5 +1,6 @@
 package com.example.Controller;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -7,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,8 +33,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.Entity.Attendance;
+import com.example.Entity.EventQrSession;
+import com.example.Exception.ResourceNotFoundException;
 import com.example.Response.ResponceBean;
 import com.example.Service.AttendanceService;
+import com.example.Service.QrAttendanceService;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -45,6 +53,9 @@ public class AttendanceController {
 
     @Autowired
     private AttendanceService attendanceService;
+
+    @Autowired
+    private QrAttendanceService qrAttendanceService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -125,6 +136,109 @@ public class AttendanceController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ResponceBean.error("Invalid request", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/qr-session/start")
+    @Operation(summary = "Start QR attendance session", description = "Start a time-bound QR attendance session for an event")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> startQrSession(@RequestBody @NonNull QrSessionStartRequest request) {
+        Integer eventId = request.resolveEventId();
+        if (eventId == null || eventId <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Invalid request", "event_id is required and must be a positive integer"));
+        }
+
+        try {
+            EventQrSession session = qrAttendanceService.startSession(eventId, request.getDurationMinutes());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ResponceBean.success("QR attendance session started", buildQrSessionResponse(session)));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error(ex.getMessage()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Unable to start QR session", ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/qr-session/{sessionId}")
+    @Operation(summary = "Get QR attendance session", description = "Fetch QR session details and live attendance count")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> getQrSession(@PathVariable Integer sessionId) {
+        try {
+            EventQrSession session = qrAttendanceService.getSession(sessionId);
+            return ResponseEntity.ok(ResponceBean.success("QR session retrieved successfully", buildQrSessionResponse(session)));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/qr-session/{sessionId}/refresh")
+    @Operation(summary = "Refresh QR attendance session", description = "Rotate QR token and extend a running QR attendance session")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> refreshQrSession(
+            @PathVariable Integer sessionId,
+            @RequestBody(required = false) QrSessionRefreshRequest request) {
+        try {
+            Integer durationSeconds = request != null ? request.getDurationSeconds() : null;
+            EventQrSession session = qrAttendanceService.refreshSession(sessionId, durationSeconds);
+            return ResponseEntity.ok(ResponceBean.success("QR session refreshed", buildQrSessionResponse(session)));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error(ex.getMessage()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Unable to refresh QR session", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/qr-session/{sessionId}/end")
+    @Operation(summary = "End QR attendance session", description = "End a QR attendance session immediately")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> endQrSession(@PathVariable Integer sessionId) {
+        try {
+            EventQrSession session = qrAttendanceService.endSession(sessionId);
+            return ResponseEntity.ok(ResponceBean.success("QR session ended", buildQrSessionResponse(session)));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/scan")
+    @Operation(summary = "Scan QR attendance token", description = "Validate QR token and mark student attendance")
+    public ResponseEntity<ResponceBean<Map<String, Object>>> scanQrAttendance(@RequestBody @NonNull QrScanRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String requesterEmail = authentication != null ? authentication.getName() : null;
+
+        try {
+            Attendance savedAttendance = qrAttendanceService.scanAttendance(request.getQrToken(), request.getUserId(), requesterEmail);
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("attendanceId", savedAttendance.getAttendanceId());
+            response.put("status", savedAttendance.getStatus());
+            response.put("method", savedAttendance.getAttendanceMethod());
+            response.put("checkInTime", savedAttendance.getCheckInTime());
+
+            if (savedAttendance.getUser() != null) {
+                response.put("userId", savedAttendance.getUser().getUserId());
+                response.put("userName", savedAttendance.getUser().getName());
+            }
+
+            if (savedAttendance.getEvent() != null) {
+                response.put("eventId", savedAttendance.getEvent().getEventId());
+                response.put("eventName", savedAttendance.getEvent().getEventName());
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ResponceBean.success("Attendance marked successfully", response));
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ResponceBean.error(ex.getMessage()));
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error(ex.getMessage()));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResponceBean.error(ex.getMessage()));
         }
     }
 
@@ -214,6 +328,33 @@ public class AttendanceController {
         }
 
         throw new IllegalArgumentException("Date values must be valid ISO date/time (example: 2026-04-20 or 2026-04-20T10:30:00)");
+    }
+
+    private Map<String, Object> buildQrSessionResponse(EventQrSession session) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("sessionId", session.getSessionId());
+        response.put("qrToken", session.getQrToken());
+        response.put("expiresAt", session.getExpiresAt());
+        response.put("createdAt", session.getCreatedAt());
+        response.put("endedAt", session.getEndedAt());
+        response.put("remainingSeconds", calculateRemainingSeconds(session.getExpiresAt()));
+
+        if (session.getEvent() != null) {
+            response.put("eventId", session.getEvent().getEventId());
+            response.put("eventName", session.getEvent().getEventName());
+            response.put("liveAttendanceCount", qrAttendanceService.getLiveAttendanceCount(session.getEvent().getEventId()));
+        }
+
+        return response;
+    }
+
+    private long calculateRemainingSeconds(LocalDateTime expiresAt) {
+        if (expiresAt == null) {
+            return 0;
+        }
+
+        long seconds = Duration.between(LocalDateTime.now(), expiresAt).getSeconds();
+        return Math.max(seconds, 0);
     }
 
     public static class AttendanceCreateRequest {
@@ -406,6 +547,85 @@ public class AttendanceController {
                 return markedById;
             }
             return markedBy != null ? markedBy.getUserId() : null;
+        }
+    }
+
+    public static class QrSessionStartRequest {
+        @JsonProperty("event_id")
+        @JsonAlias({ "eventId" })
+        private Integer eventId;
+
+        private Integer durationMinutes;
+
+        private EventRef event;
+
+        public Integer getEventId() {
+            return eventId;
+        }
+
+        public void setEventId(Integer eventId) {
+            this.eventId = eventId;
+        }
+
+        public Integer getDurationMinutes() {
+            return durationMinutes;
+        }
+
+        public void setDurationMinutes(Integer durationMinutes) {
+            this.durationMinutes = durationMinutes;
+        }
+
+        public EventRef getEvent() {
+            return event;
+        }
+
+        public void setEvent(EventRef event) {
+            this.event = event;
+        }
+
+        public Integer resolveEventId() {
+            if (eventId != null) {
+                return eventId;
+            }
+            return event != null ? event.getEventId() : null;
+        }
+    }
+
+    public static class QrSessionRefreshRequest {
+        private Integer durationSeconds;
+
+        public Integer getDurationSeconds() {
+            return durationSeconds;
+        }
+
+        public void setDurationSeconds(Integer durationSeconds) {
+            this.durationSeconds = durationSeconds;
+        }
+    }
+
+    public static class QrScanRequest {
+        @JsonProperty("qr_token")
+        @JsonAlias({ "qrToken", "token" })
+        private String qrToken;
+
+        @JsonProperty("user_id")
+        @JsonAlias({ "userId" })
+        private Integer userId;
+
+        public String getQrToken() {
+            return qrToken;
+        }
+
+        public void setQrToken(String qrToken) {
+            this.qrToken = qrToken;
+        }
+
+        public Integer getUserId() {
+            return userId;
+        }
+
+        public void setUserId(Integer userId) {
+            this.userId = userId;
         }
     }
 

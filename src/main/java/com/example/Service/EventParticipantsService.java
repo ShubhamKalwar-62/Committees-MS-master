@@ -16,8 +16,12 @@ public interface EventParticipantsService {
     List<EventParticipants> getParticipantsByEventId(Integer eventId);
     List<EventParticipants> getParticipantsByUserId(Integer userId);
     List<EventParticipants> getParticipantsByStatus(EventParticipants.RegistrationStatus status);
+    List<EventParticipants> getPendingRegistrations();
     List<EventParticipants> getParticipantsByAttendance(Boolean attended);
     Long getRegisteredParticipantsCount(Integer eventId);
+    EventParticipants registerParticipant(Integer eventId, Integer userId);
+    EventParticipants approveRegistration(Integer id);
+    EventParticipants rejectRegistration(Integer id);
     EventParticipants saveParticipant(EventParticipants participant);
     void deleteParticipant(Integer id);
     EventParticipants updateParticipant(Integer id, EventParticipants participantDetails);

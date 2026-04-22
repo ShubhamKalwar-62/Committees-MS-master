@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.Entity.Announcements;
+import com.example.Exception.ResourceNotFoundException;
 import com.example.Response.ResponceBean;
 import com.example.Service.AnnouncementsService;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,9 +84,14 @@ public class AnnouncementsController {
     @PostMapping
     @Operation(summary = "Create new announcement", description = "Create a new announcement")
     public ResponseEntity<ResponceBean<Announcements>> createAnnouncement(@RequestBody Announcements announcement) {
-        Announcements savedAnnouncement = announcementsService.saveAnnouncement(announcement);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ResponceBean.success("Announcement created successfully", savedAnnouncement));
+        try {
+            Announcements savedAnnouncement = announcementsService.saveAnnouncement(announcement);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ResponceBean.success("Announcement created successfully", savedAnnouncement));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponceBean.error("Invalid announcement payload", ex.getMessage()));
+        }
     }
     
     @PutMapping("/{id}")
@@ -111,8 +118,19 @@ public class AnnouncementsController {
             Announcements patched = objectMapper.updateValue(existing.get(), updates);
             Announcements saved = announcementsService.saveAnnouncement(patched);
             return ResponseEntity.ok(ResponceBean.success("Announcement patched successfully", saved));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | JsonMappingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponceBean.error("Invalid patch payload", ex.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/read")
+    @Operation(summary = "Mark announcement as read", description = "Mark a specific announcement as read")
+    public ResponseEntity<ResponceBean<Announcements>> markAnnouncementAsRead(@PathVariable Integer id) {
+        try {
+            Announcements updatedAnnouncement = announcementsService.markAnnouncementAsRead(id);
+            return ResponseEntity.ok(ResponceBean.success("Announcement marked as read", updatedAnnouncement));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponceBean.error(ex.getMessage()));
         }
     }
     

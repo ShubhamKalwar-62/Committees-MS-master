@@ -31,6 +31,18 @@ public class Announcements {
     @NotBlank(message = "Message is required")
     @Column(name = "title", columnDefinition = "TEXT", nullable = false)
     private String message;
+
+    @Column(name = "announcement_type", length = 20, nullable = false)
+    private String type = "general";
+
+    @Column(name = "reference_id")
+    private Integer referenceId;
+
+    @Column(name = "is_read", nullable = false)
+    private Boolean read = false;
+
+    @Column(name = "is_important", nullable = false)
+    private Boolean important = false;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -82,6 +94,38 @@ public class Announcements {
 
     public void setTitle(String title) {
         this.message = title;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Integer getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(Integer referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public Boolean getRead() {
+        return read;
+    }
+
+    public void setRead(Boolean read) {
+        this.read = read;
+    }
+
+    public Boolean getImportant() {
+        return important;
+    }
+
+    public void setImportant(Boolean important) {
+        this.important = important;
     }
     
     public Users getUser() {

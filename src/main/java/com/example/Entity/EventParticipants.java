@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "event_participants")
+@Table(name = "event_registrations")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class EventParticipants {
     
@@ -41,11 +41,14 @@ public class EventParticipants {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private RegistrationStatus status = RegistrationStatus.REGISTERED;
+    private RegistrationStatus status = RegistrationStatus.PENDING;
     
     @CreationTimestamp
     @Column(name = "registered_at", nullable = false, updatable = false)
     private LocalDateTime registeredAt;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
     
     @Column(name = "attended")
     private Boolean attended = false;
@@ -56,7 +59,7 @@ public class EventParticipants {
     
     // Enum for Registration Status
     public enum RegistrationStatus {
-        REGISTERED, CONFIRMED, CANCELLED, ATTENDED
+        PENDING, APPROVED, REJECTED
     }
     
     // Constructors
@@ -106,6 +109,14 @@ public class EventParticipants {
     
     public void setRegisteredAt(LocalDateTime registeredAt) {
         this.registeredAt = registeredAt;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
     }
     
     public Boolean getAttended() {

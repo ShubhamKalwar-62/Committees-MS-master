@@ -17,6 +17,7 @@ public interface AnnouncementsService {
     List<Announcements> searchAnnouncementsByMessage(String message);
     List<Announcements> getAnnouncementsBetweenDates(LocalDateTime startDate, LocalDateTime endDate);
     Announcements saveAnnouncement(Announcements announcement);
+    Announcements markAnnouncementAsRead(Integer id);
     void deleteAnnouncement(Integer id);
     Announcements updateAnnouncement(Integer id, Announcements announcementDetails);
 }
