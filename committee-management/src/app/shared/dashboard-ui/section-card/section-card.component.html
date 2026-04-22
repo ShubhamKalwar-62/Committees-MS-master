@@ -1,0 +1,13 @@
+<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl">
+  <header class="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h3 class="text-xl font-extrabold tracking-[-0.01em] text-slate-900">{{ title }}</h3>
+      <p *ngIf="subtitle" class="mt-1 text-sm text-slate-500">{{ subtitle }}</p>
+    </div>
+    <span *ngIf="badge" class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-indigo-700">
+      {{ badge }}
+    </span>
+  </header>
+
+  <ng-content></ng-content>
+</section>

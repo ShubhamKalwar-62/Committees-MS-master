@@ -4,48 +4,59 @@
 		<p class="page-header-subtitle">Explore committee ownership, faculty in-charge details, and role context.</p>
 	</div>
 
-	<div *ngIf="loading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
-		Loading committees...
+	<div *ngIf="isLoading" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+		<div class="inline-flex items-center gap-2">
+			<span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600"></span>
+			Loading committees...
+		</div>
 	</div>
 
 	<div *ngIf="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
 		{{ errorMessage }}
 	</div>
 
-	<div *ngIf="!loading && !errorMessage" class="grid gap-4 md:grid-cols-2">
-		<article *ngFor="let committee of committees" class="committee-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-			<div class="flex items-start justify-between gap-3">
-				<div class="min-w-0">
-					<h3 class="mb-1 truncate text-xl font-semibold text-slate-800">{{ committee.committeeName }}</h3>
-					<p class="mb-0 text-sm font-medium text-slate-500">{{ committee.facultyInchargeName || 'Faculty not assigned' }}</p>
-				</div>
+	<div *ngIf="!isLoading && !errorMessage">
+		<ng-container *ngIf="committees.length > 0; else emptyCommitteesState">
+			<div class="grid gap-4 md:grid-cols-2">
+				<article *ngFor="let committee of committees" class="committee-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<h3 class="mb-1 truncate text-xl font-semibold text-slate-800">{{ committee.committeeName }}</h3>
+							<p class="mb-0 text-sm font-medium text-slate-500">{{ committee.facultyInchargeName || 'Faculty not assigned' }}</p>
+						</div>
 
-				<span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">
-					Committee
-				</span>
+						<span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">
+							Committee
+						</span>
+					</div>
+
+					<p class="mb-0 mt-3 text-sm leading-relaxed text-slate-600">{{ getCommitteeDescription(committee) }}</p>
+
+					<div class="mt-4">
+						<a
+							*ngIf="getCommitteeRouteId(committee) as routeId; else unavailableDetails"
+							class="inline-flex items-center rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 no-underline transition-all hover:-translate-y-0.5 hover:bg-blue-100 hover:text-blue-800"
+							[routerLink]="[routeId]"
+						>
+							View Details
+						</a>
+
+						<ng-template #unavailableDetails>
+							<span class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-500">
+								Details Unavailable
+							</span>
+						</ng-template>
+					</div>
+				</article>
 			</div>
+		</ng-container>
 
-			<p class="mb-0 mt-3 text-sm leading-relaxed text-slate-600">{{ getCommitteeDescription(committee) }}</p>
-
-			<div class="mt-4">
-				<a
-					*ngIf="getCommitteeRouteId(committee) as routeId; else unavailableDetails"
-					class="inline-flex items-center rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 no-underline transition-all hover:-translate-y-0.5 hover:bg-blue-100 hover:text-blue-800"
-					[routerLink]="[routeId]"
-				>
-					View Details
-				</a>
-
-				<ng-template #unavailableDetails>
-					<span class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-500">
-						Details Unavailable
-					</span>
-				</ng-template>
-			</div>
-		</article>
-
-		<div *ngIf="!committees.length" class="md:col-span-2 rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-sm">
-			No committees are available yet.
-		</div>
+		<ng-template #emptyCommitteesState>
+			<app-empty-state
+				icon="groups"
+				title="No committees found"
+				subtitle="You are not assigned to any committee yet"
+			></app-empty-state>
+		</ng-template>
 	</div>
 </section>

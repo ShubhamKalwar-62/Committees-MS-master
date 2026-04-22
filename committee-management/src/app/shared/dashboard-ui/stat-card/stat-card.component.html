@@ -1,0 +1,18 @@
+<button
+  type="button"
+  class="group w-full rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+  (click)="onCardClick()"
+>
+  <div class="flex items-center justify-between gap-3">
+    <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl" [ngClass]="toneClasses">
+      <span class="material-icons text-[20px]">{{ icon }}</span>
+    </span>
+    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+      {{ trend }}
+    </span>
+  </div>
+
+  <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{{ title }}</p>
+  <p class="mt-1 text-4xl font-extrabold leading-none text-slate-900">{{ value }}</p>
+  <p class="mt-2 text-sm text-slate-500">{{ subtitle }}</p>
+</button>

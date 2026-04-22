@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthResponse } from '../../../models/auth.model';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 
@@ -36,9 +37,9 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
     this.authService.login(this.loginForm.getRawValue() as { email: string; password: string }).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading = false;
-        const homeRoute = this.authService.getRoleHomeRoute();
+        const homeRoute = this.resolveHomeRoute(response);
         const role = this.authService.getCurrentRole() || 'USER';
         this.notificationService.add({
           title: 'Signed In',
@@ -46,7 +47,12 @@ export class LoginComponent {
           level: 'success',
           actionRoute: homeRoute
         });
-        this.router.navigateByUrl(homeRoute);
+
+        void this.router.navigateByUrl(homeRoute).then((navigated) => {
+          if (!navigated) {
+            void this.router.navigateByUrl(this.authService.getRoleHomeRoute());
+          }
+        });
       },
       error: (err) => {
         this.loading = false;
@@ -59,6 +65,21 @@ export class LoginComponent {
         });
       }
     });
+  }
+
+  private resolveHomeRoute(response: AuthResponse): string {
+    const role = (response?.role || this.authService.getCurrentRole() || '').trim().toUpperCase();
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+      return '/admin/dashboard';
+    }
+    if (role === 'FACULTY' || role === 'ROLE_FACULTY') {
+      return '/faculty/dashboard';
+    }
+    if (role === 'STUDENT' || role === 'ROLE_STUDENT') {
+      return '/student/dashboard';
+    }
+
+    return this.authService.getRoleHomeRoute();
   }
 
 }

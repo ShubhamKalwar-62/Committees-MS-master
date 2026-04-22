@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
+import { StudentOnboardingService } from '../../../services/student-onboarding.service';
 
 type MenuItem = {
   label: string;
@@ -13,7 +15,11 @@ type MenuItem = {
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit, OnDestroy {
+  isNewUser = false;
+  private readonly lockedMenuTooltip = 'Complete onboarding to unlock';
+  private onboardingSubscription?: Subscription;
+
   private readonly menuByRole: Record<string, MenuItem[]> = {
     ADMIN: [
       { label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
@@ -39,7 +45,22 @@ export class SidebarComponent {
     ]
   };
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private studentOnboardingService: StudentOnboardingService
+  ) {}
+
+  ngOnInit(): void {
+    this.onboardingSubscription = this.studentOnboardingService.isNewUser$.subscribe((status) => {
+      this.isNewUser = status;
+    });
+
+    this.studentOnboardingService.refreshStatus();
+  }
+
+  ngOnDestroy(): void {
+    this.onboardingSubscription?.unsubscribe();
+  }
 
   get role(): string {
     return this.authService.getCurrentRole() || 'GUEST';
@@ -47,6 +68,18 @@ export class SidebarComponent {
 
   get menuItems(): MenuItem[] {
     return this.menuByRole[this.role] || [];
+  }
+
+  isMenuItemLocked(item: MenuItem): boolean {
+    if (this.role !== 'STUDENT' || !this.isNewUser) {
+      return false;
+    }
+
+    return item.route === '/tasks' || item.route === '/attendance';
+  }
+
+  getMenuItemLockTooltip(item: MenuItem): string | null {
+    return this.isMenuItemLocked(item) ? this.lockedMenuTooltip : null;
   }
 
 }

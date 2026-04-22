@@ -34,7 +34,10 @@ export class CommitteeDetailComponent {
       this.committeeService.getCommitteeById(id).subscribe({
         next: (committee) => {
           this.loading = false;
-          this.committee = committee;
+          this.committee = committee || undefined;
+          if (!this.committee) {
+            this.errorMessage = 'Committee not found.';
+          }
         },
         error: () => {
           this.loading = false;

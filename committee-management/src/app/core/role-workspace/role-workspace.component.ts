@@ -1,13 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-
-type RoleWorkspaceItem = {
-  label: string;
-  icon: string;
-  route: string;
-  fragment?: string;
-};
+import { StudentOnboardingService } from '../../services/student-onboarding.service';
+import { ROLE_WORKSPACE_MENUS, RoleWorkspaceItem, WorkspaceRole } from '../navigation/role-navigation.config';
 
 @Component({
   selector: 'app-role-workspace',
@@ -15,38 +11,40 @@ type RoleWorkspaceItem = {
   templateUrl: './role-workspace.component.html',
   styleUrl: './role-workspace.component.css'
 })
-export class RoleWorkspaceComponent {
-  private readonly menuByRole: Record<string, RoleWorkspaceItem[]> = {
-    ADMIN: [
-      { label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
-      { label: 'Users', icon: 'person_outline', route: '/users' },
-      { label: 'Committees', icon: 'groups', route: '/committees' },
-      { label: 'Events', icon: 'event', route: '/events' },
-      { label: 'Mail-Tools', icon: 'settings', route: '/admin/mail-tools' }
-    ],
-    FACULTY: [
-      { label: 'Dashboard', icon: 'dashboard', route: '/faculty/dashboard' },
-      { label: 'Committees', icon: 'groups', route: '/committees' },
-      { label: 'Events', icon: 'event', route: '/events' },
-      { label: 'Tasks', icon: 'task_alt', route: '/tasks' },
-      { label: 'Attendance', icon: 'fact_check', route: '/attendance' },
-      { label: 'Announcements', icon: 'campaign', route: '/announcements' }
-    ],
-    STUDENT: [
-      { label: 'Dashboard', icon: 'dashboard', route: '/student/dashboard' },
-      { label: 'Events', icon: 'event', route: '/student/events' },
-      { label: 'Committees', icon: 'groups', route: '/student/committees' },
-      { label: 'Tasks', icon: 'task_alt', route: '/student/tasks' },
-      { label: 'Attendance', icon: 'fact_check', route: '/student/attendance' },
-      { label: 'Announcements', icon: 'campaign', route: '/student/announcements' },
-      { label: 'Profile', icon: 'settings', route: '/student/profile' }
-    ]
-  };
+export class RoleWorkspaceComponent implements OnInit, OnDestroy {
+  isNewUser = false;
+  private readonly lockedMenuTooltip = 'Complete onboarding to unlock';
+  private onboardingSubscription?: Subscription;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private studentOnboardingService: StudentOnboardingService
+  ) {}
 
-  get role(): string {
-    return this.authService.getCurrentRole() || 'GUEST';
+  ngOnInit(): void {
+    this.onboardingSubscription = this.studentOnboardingService.isNewUser$.subscribe((status) => {
+      this.isNewUser = status;
+    });
+
+    this.studentOnboardingService.refreshStatus();
+  }
+
+  ngOnDestroy(): void {
+    this.onboardingSubscription?.unsubscribe();
+  }
+
+  get role(): WorkspaceRole | null {
+    const currentRole = (this.authService.getCurrentRole() || '').toUpperCase();
+    if (currentRole === 'ADMIN' || currentRole === 'FACULTY' || currentRole === 'STUDENT') {
+      return currentRole;
+    }
+
+    return null;
+  }
+
+  get roleLabel(): string {
+    return this.role || 'GUEST';
   }
 
   get roleSubtitle(): string {
@@ -54,7 +52,23 @@ export class RoleWorkspaceComponent {
   }
 
   get menuItems(): RoleWorkspaceItem[] {
-    return this.menuByRole[this.role] || [];
+    if (!this.role) {
+      return [];
+    }
+
+    return ROLE_WORKSPACE_MENUS[this.role];
+  }
+
+  isMenuItemLocked(item: RoleWorkspaceItem): boolean {
+    if (this.role !== 'STUDENT' || !this.isNewUser) {
+      return false;
+    }
+
+    return item.route === '/student/tasks' || item.route.startsWith('/student/attendance');
+  }
+
+  getMenuItemLockTooltip(item: RoleWorkspaceItem): string | null {
+    return this.isMenuItemLocked(item) ? this.lockedMenuTooltip : null;
   }
 
   logout(): void {

@@ -1,0 +1,25 @@
+<div class="space-y-3">
+  <button
+    type="button"
+    *ngFor="let item of items"
+    class="flex w-full items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition-all duration-300"
+    [ngClass]="interactive ? 'hover:-translate-y-0.5 hover:bg-white hover:shadow-md' : ''"
+    (click)="onItemSelected(item)"
+  >
+    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full" [ngClass]="getToneClasses(item.tone)">
+      <span class="material-icons text-[16px]">{{ item.icon || 'schedule' }}</span>
+    </span>
+
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <p class="m-0 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">{{ item.time }}</p>
+        <span *ngIf="item.meta" class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-600">{{ item.meta }}</span>
+      </div>
+      <p class="mt-1 text-sm text-slate-700">{{ item.text }}</p>
+    </div>
+  </button>
+
+  <p *ngIf="items.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
+    {{ emptyMessage }}
+  </p>
+</div>

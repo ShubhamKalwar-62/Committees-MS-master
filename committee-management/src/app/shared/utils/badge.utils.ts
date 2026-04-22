@@ -75,3 +75,20 @@ export function getEventStatusBadgeClass(status: string | undefined): string {
 
   return fallbackBadge;
 }
+
+export function getRegistrationStatusBadgeClass(status: string | undefined): string {
+  const normalized = normalizeBadgeValue(status);
+  if (normalized === 'APPROVED') {
+    return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  }
+
+  if (normalized === 'PENDING') {
+    return 'bg-amber-100 text-amber-700 border-amber-200';
+  }
+
+  if (normalized === 'REJECTED') {
+    return 'bg-rose-100 text-rose-700 border-rose-200';
+  }
+
+  return fallbackBadge;
+}

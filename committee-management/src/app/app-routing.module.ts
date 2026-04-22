@@ -60,8 +60,8 @@ const routes: Routes = [
   },
   {
     path: 'dashboard',
-    redirectTo: 'auth/login',
-    pathMatch: 'full'
+    component: LandingPageComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'users',

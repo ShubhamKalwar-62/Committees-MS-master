@@ -1,7 +1,7 @@
 <nav
   class="fixed inset-x-0 top-0 z-50 border-b"
   [ngClass]="[
-    hasSidebarOffset && !usePremiumGuestNavbar ? 'lg:left-64' : '',
+    hasSidebarOffset && !usePremiumGuestNavbar ? 'md:left-64' : '',
     usePremiumGuestNavbar ? 'border-gray-200 bg-[#f8fafc]' : 'border-slate-200/90 bg-white/95 backdrop-blur-sm'
   ]"
 >
@@ -70,6 +70,7 @@
       <div class="flex h-[78px] items-center gap-3 lg:gap-6">
         <a
           class="workspace-brand no-underline"
+          [ngClass]="hasSidebarOffset ? 'workspace-brand-sidebar-hidden' : ''"
           [routerLink]="homeRoute"
           title="Go to dashboard"
           (click)="closeMobileMenu()"
@@ -78,9 +79,63 @@
           <span class="workspace-brand-subtitle">{{ workspaceSubtitle }}</span>
         </a>
 
-        <div class="workspace-search-shell workspace-search-shell-desktop">
-          <span class="material-icons workspace-search-icon">search</span>
-          <input type="text" [placeholder]="searchPlaceholder" class="workspace-search-input" />
+        <div class="workspace-search-container workspace-search-shell-desktop" #desktopSearchContainer>
+          <div class="workspace-search-shell">
+            <span class="material-icons workspace-search-icon">search</span>
+            <input
+              type="text"
+              [placeholder]="searchPlaceholder"
+              class="workspace-search-input"
+              [value]="searchQuery"
+              (focus)="onSearchFocus('desktop')"
+              (input)="onSearchInput($event)"
+              (keydown)="onSearchKeydown($event)"
+            />
+            <button
+              *ngIf="hasSearchQuery"
+              type="button"
+              class="workspace-search-clear-btn"
+              (click)="clearSearch($event)"
+              aria-label="Clear search"
+            >
+              <span class="material-icons text-[18px]">close</span>
+            </button>
+          </div>
+
+          <div *ngIf="shouldShowSearchDropdown('desktop')" class="workspace-search-dropdown menu-pop">
+            <div *ngIf="isSearchLoading" class="search-dropdown-state">Searching records...</div>
+
+            <ng-container *ngIf="!isSearchLoading">
+              <div *ngFor="let section of searchSections" class="search-section-group">
+                <p class="search-section-title">{{ section.title }}</p>
+
+                <button
+                  *ngFor="let result of section.items"
+                  type="button"
+                  class="search-result-item"
+                  [ngClass]="selectedSearchIndex === getSearchResultIndex(result) ? 'search-result-item-active' : ''"
+                  (click)="onSearchResultClick(result, $event)"
+                >
+                  <span class="search-result-icon">
+                    <span class="material-icons text-[16px]">{{ result.icon }}</span>
+                  </span>
+
+                  <span class="min-w-0 flex-1 text-left">
+                    <span class="search-result-title">{{ result.title }}</span>
+                    <span *ngIf="result.subtitle" class="search-result-subtitle">{{ result.subtitle }}</span>
+                  </span>
+
+                  <span class="search-result-type" [ngClass]="getSearchTypeClass(result.type)">
+                    {{ getSearchTypeLabel(result.type) }}
+                  </span>
+                </button>
+              </div>
+
+              <div *ngIf="searchSections.length === 0" class="search-dropdown-state">
+                No matches for "{{ searchQuery.trim() }}"
+              </div>
+            </ng-container>
+          </div>
         </div>
 
         <div class="relative ml-auto flex items-center gap-2 sm:gap-2.5">
@@ -222,6 +277,11 @@
                   [routerLink]="item.route"
                   [fragment]="item.fragment"
                   (click)="onProfileItemSelect()"
+                  [class.opacity-50]="isMenuItemLocked(item)"
+                  [class.pointer-events-none]="isMenuItemLocked(item)"
+                  [attr.aria-disabled]="isMenuItemLocked(item) ? 'true' : null"
+                  [attr.tabindex]="isMenuItemLocked(item) ? '-1' : null"
+                  [attr.title]="getMenuItemLockTooltip(item)"
                   class="block rounded-md px-2 py-2 no-underline text-slate-800 transition-all hover:translate-x-0.5 hover:bg-slate-50 hover:text-slate-900"
                 >
                   <div class="flex items-center gap-2">
@@ -249,10 +309,64 @@
         </div>
       </div>
 
-      <div class="pb-3 lg:hidden">
-        <div class="workspace-search-shell workspace-search-shell-mobile w-full">
-          <span class="material-icons workspace-search-icon">search</span>
-          <input type="text" [placeholder]="searchPlaceholder" class="workspace-search-input" />
+      <div class="pb-3 md:hidden lg:hidden">
+        <div class="workspace-search-container workspace-search-shell-mobile w-full" #mobileSearchContainer>
+          <div class="workspace-search-shell w-full">
+            <span class="material-icons workspace-search-icon">search</span>
+            <input
+              type="text"
+              [placeholder]="searchPlaceholder"
+              class="workspace-search-input"
+              [value]="searchQuery"
+              (focus)="onSearchFocus('mobile')"
+              (input)="onSearchInput($event)"
+              (keydown)="onSearchKeydown($event)"
+            />
+            <button
+              *ngIf="hasSearchQuery"
+              type="button"
+              class="workspace-search-clear-btn"
+              (click)="clearSearch($event)"
+              aria-label="Clear search"
+            >
+              <span class="material-icons text-[18px]">close</span>
+            </button>
+          </div>
+
+          <div *ngIf="shouldShowSearchDropdown('mobile')" class="workspace-search-dropdown workspace-search-dropdown-mobile menu-pop">
+            <div *ngIf="isSearchLoading" class="search-dropdown-state">Searching records...</div>
+
+            <ng-container *ngIf="!isSearchLoading">
+              <div *ngFor="let section of searchSections" class="search-section-group">
+                <p class="search-section-title">{{ section.title }}</p>
+
+                <button
+                  *ngFor="let result of section.items"
+                  type="button"
+                  class="search-result-item"
+                  [ngClass]="selectedSearchIndex === getSearchResultIndex(result) ? 'search-result-item-active' : ''"
+                  (click)="onSearchResultClick(result, $event)"
+                >
+                  <span class="search-result-icon">
+                    <span class="material-icons text-[16px]">{{ result.icon }}</span>
+                  </span>
+
+                  <span class="min-w-0 flex-1 text-left">
+                    <span class="search-result-title">{{ result.title }}</span>
+                    <span *ngIf="result.subtitle" class="search-result-subtitle">{{ result.subtitle }}</span>
+                  </span>
+
+                  <span class="search-result-type" [ngClass]="getSearchTypeClass(result.type)">
+                    {{ getSearchTypeLabel(result.type) }}
+                  </span>
+                </button>
+              </div>
+
+              <div *ngIf="searchSections.length === 0" class="search-dropdown-state">
+                No matches for "{{ searchQuery.trim() }}"
+              </div>
+            </ng-container>
+          </div>
         </div>
       </div>
 
@@ -261,17 +375,27 @@
           *ngFor="let item of mobileMenuItems"
           [routerLink]="item.route"
           [fragment]="item.fragment"
+          #mobileRla="routerLinkActive"
+          routerLinkActive="mobile-workspace-link-active"
+          [routerLinkActiveOptions]="{ exact: false }"
           (click)="closeMobileMenu()"
-          class="top-link touch-target rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-all"
+          [class.opacity-50]="isMenuItemLocked(item)"
+          [class.pointer-events-none]="isMenuItemLocked(item)"
+          [attr.aria-disabled]="isMenuItemLocked(item) ? 'true' : null"
+          [attr.tabindex]="isMenuItemLocked(item) ? '-1' : null"
+          [attr.title]="getMenuItemLockTooltip(item)"
+          class="mobile-workspace-link group touch-target rounded-xl px-3 py-2.5"
         >
-          {{ item.label }}
+          <span class="material-icons text-[18px] transition-colors text-slate-400 group-hover:text-[#123f8b]" [ngClass]="mobileRla.isActive ? 'text-[#123f8b]' : ''">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
         </a>
 
         <button
           type="button"
           (click)="logout()"
-          class="top-link touch-target w-full border-0 bg-transparent rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-all"
+          class="touch-target flex w-full items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-left text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
         >
+          <span class="material-icons text-[18px]">logout</span>
           Sign Out
         </button>
       </div>

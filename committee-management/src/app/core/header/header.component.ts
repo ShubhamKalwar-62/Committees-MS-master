@@ -1,14 +1,16 @@
 import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
+import { Committee } from '../../models/committee.model';
+import { Event as EventModel } from '../../models/event.model';
+import { Task } from '../../models/task.model';
 import { AuthService } from '../../services/auth.service';
+import { CommitteeService } from '../../services/committee.service';
+import { EventService } from '../../services/event.service';
 import { AppNotification, NotificationService } from '../../services/notification.service';
-
-type HeaderMenuItem = {
-  label: string;
-  route: string;
-  fragment?: string;
-};
+import { StudentOnboardingService } from '../../services/student-onboarding.service';
+import { TaskService } from '../../services/task.service';
+import { ROLE_WORKSPACE_MENUS, RoleWorkspaceItem, WorkspaceRole } from '../navigation/role-navigation.config';
 
 type HeaderProfileItem = {
   label: string;
@@ -16,6 +18,24 @@ type HeaderProfileItem = {
   fragment?: string;
   icon: string;
   hint?: string;
+};
+
+type SearchEntityType = 'EVENT' | 'COMMITTEE' | 'TASK';
+type SearchSurface = 'desktop' | 'mobile';
+
+type SearchResultItem = {
+  type: SearchEntityType;
+  id: number;
+  title: string;
+  subtitle: string;
+  route: string;
+  icon: string;
+};
+
+type SearchResultSection = {
+  type: SearchEntityType;
+  title: string;
+  items: SearchResultItem[];
 };
 
 @Component({
@@ -31,44 +51,31 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('notificationsPanel') notificationsPanel?: ElementRef<HTMLDivElement>;
   @ViewChild('profileButton') profileButton?: ElementRef<HTMLButtonElement>;
   @ViewChild('profilePanel') profilePanel?: ElementRef<HTMLDivElement>;
+  @ViewChild('desktopSearchContainer') desktopSearchContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('mobileSearchContainer') mobileSearchContainer?: ElementRef<HTMLDivElement>;
 
   isMobileMenuOpen = false;
   isNotificationsOpen = false;
   isProfileOpen = false;
+  searchQuery = '';
+  isSearchOpen = false;
+  isSearchLoading = false;
+  filteredSearchResults: SearchResultItem[] = [];
+  searchSections: SearchResultSection[] = [];
+  selectedSearchIndex = -1;
+  activeSearchSurface: SearchSurface | null = null;
   notificationFilter: 'all' | 'unread' = 'all';
   notifications: AppNotification[] = [];
   readonly landingRoute = '/';
   readonly brandTagline = 'Campus Operations Platform';
+  isNewUser = false;
+  private readonly lockedMenuTooltip = 'Complete onboarding to unlock';
   private notificationsSubscription?: Subscription;
+  private onboardingSubscription?: Subscription;
+  private searchIndex: SearchResultItem[] = [];
+  private hasLoadedSearchIndex = false;
 
-  private readonly menuByRole: Record<string, HeaderMenuItem[]> = {
-    ADMIN: [
-      { label: 'Dashboard', route: '/admin/dashboard' },
-      { label: 'Users', route: '/users' },
-      { label: 'Events', route: '/events' },
-      { label: 'Committees', route: '/committees' },
-      { label: 'Mail-Tools', route: '/admin/mail-tools' }
-    ],
-    FACULTY: [
-      { label: 'Dashboard', route: '/faculty/dashboard' },
-      { label: 'My Committees', route: '/committees' },
-      { label: 'Events', route: '/events' },
-      { label: 'Tasks', route: '/tasks' },
-      { label: 'Attendance', route: '/attendance' },
-      { label: 'Announcements', route: '/announcements' }
-    ],
-    STUDENT: [
-      { label: 'Dashboard', route: '/student/dashboard' },
-      { label: 'Events', route: '/student/events' },
-      { label: 'Committees', route: '/student/committees' },
-      { label: 'Tasks', route: '/student/tasks' },
-      { label: 'Attendance', route: '/student/attendance' },
-      { label: 'Announcements', route: '/student/announcements' },
-      { label: 'Profile', route: '/student/profile' }
-    ]
-  };
-
-  private readonly profileItemsByRole: Record<string, HeaderProfileItem[]> = {
+  private readonly profileItemsByRole: Record<WorkspaceRole, HeaderProfileItem[]> = {
     ADMIN: [
       { label: 'Admin Dashboard', route: '/admin/dashboard', icon: 'dashboard', hint: 'Overview and controls' },
       { label: 'User Management', route: '/users', icon: 'group', hint: 'Manage user accounts' },
@@ -96,7 +103,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private studentOnboardingService: StudentOnboardingService,
+    private eventService: EventService,
+    private committeeService: CommitteeService,
+    private taskService: TaskService
   ) {}
 
   ngOnInit(): void {
@@ -104,13 +115,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.notifications = items;
     });
 
-    if (this.isLoggedIn) {
-      this.notificationService.seedDefaultsForRole(this.currentRole);
-    }
+    this.onboardingSubscription = this.studentOnboardingService.isNewUser$.subscribe((status) => {
+      this.isNewUser = status;
+    });
+
+    this.studentOnboardingService.refreshStatus();
   }
 
   ngOnDestroy(): void {
     this.notificationsSubscription?.unsubscribe();
+    this.onboardingSubscription?.unsubscribe();
   }
 
   get isLoggedIn(): boolean {
@@ -127,7 +141,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   get currentRole(): string {
-    return this.authService.getCurrentRole() || 'GUEST';
+    return this.currentWorkspaceRole || 'GUEST';
+  }
+
+  get currentWorkspaceRole(): WorkspaceRole | null {
+    const role = (this.authService.getCurrentRole() || '').toUpperCase();
+    if (role === 'ADMIN' || role === 'FACULTY' || role === 'STUDENT') {
+      return role;
+    }
+
+    return null;
   }
 
   get homeRoute(): string {
@@ -148,7 +171,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   get searchPlaceholder(): string {
-    return 'Search tasks or committees...';
+    return 'Search in CommitteeOS...';
   }
 
   get brandShortName(): string {
@@ -164,12 +187,145 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return this.appName || 'CommitteeOS';
   }
 
-  get mobileMenuItems(): HeaderMenuItem[] {
-    return this.menuByRole[this.currentRole] || [];
+  get hasSearchQuery(): boolean {
+    return !!this.searchQuery.trim();
+  }
+
+  shouldShowSearchDropdown(surface: SearchSurface): boolean {
+    return this.isSearchOpen && this.activeSearchSurface === surface && this.hasSearchQuery;
+  }
+
+  getSearchTypeLabel(type: SearchEntityType): string {
+    if (type === 'EVENT') {
+      return 'Event';
+    }
+    if (type === 'COMMITTEE') {
+      return 'Committee';
+    }
+    return 'Task';
+  }
+
+  getSearchTypeClass(type: SearchEntityType): string {
+    if (type === 'EVENT') {
+      return 'search-result-type-event';
+    }
+    if (type === 'COMMITTEE') {
+      return 'search-result-type-committee';
+    }
+    return 'search-result-type-task';
+  }
+
+  getSearchResultIndex(result: SearchResultItem): number {
+    return this.filteredSearchResults.findIndex(
+      (item) => item.type === result.type && item.id === result.id && item.route === result.route
+    );
+  }
+
+  onSearchFocus(surface: SearchSurface): void {
+    this.activeSearchSurface = surface;
+    this.ensureSearchIndexLoaded();
+
+    if (this.hasSearchQuery) {
+      this.applySearch();
+      this.isSearchOpen = true;
+    }
+  }
+
+  onSearchInput(event: Event): void {
+    this.searchQuery = (event.target as HTMLInputElement).value || '';
+    this.selectedSearchIndex = -1;
+
+    if (!this.hasSearchQuery) {
+      this.filteredSearchResults = [];
+      this.searchSections = [];
+      this.isSearchOpen = false;
+      return;
+    }
+
+    this.ensureSearchIndexLoaded();
+    this.applySearch();
+    this.isSearchOpen = true;
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.closeSearchDropdown();
+      return;
+    }
+
+    if (!this.shouldHandleSearchNavigation()) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.selectedSearchIndex = (this.selectedSearchIndex + 1) % this.filteredSearchResults.length;
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const total = this.filteredSearchResults.length;
+      this.selectedSearchIndex = (this.selectedSearchIndex - 1 + total) % total;
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      const selectedResult = this.filteredSearchResults[this.selectedSearchIndex] || this.filteredSearchResults[0];
+      if (selectedResult) {
+        event.preventDefault();
+        this.onSearchResultClick(selectedResult);
+      }
+    }
+  }
+
+  clearSearch(event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.searchQuery = '';
+    this.filteredSearchResults = [];
+    this.searchSections = [];
+    this.selectedSearchIndex = -1;
+    this.isSearchOpen = false;
+  }
+
+  onSearchResultClick(result: SearchResultItem, event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.searchQuery = '';
+    this.filteredSearchResults = [];
+    this.searchSections = [];
+    this.selectedSearchIndex = -1;
+    this.isSearchOpen = false;
+    this.activeSearchSurface = null;
+    this.closeMobileMenu();
+    void this.router.navigateByUrl(result.route);
+  }
+
+  get mobileMenuItems(): RoleWorkspaceItem[] {
+    if (!this.currentWorkspaceRole) {
+      return [];
+    }
+
+    return ROLE_WORKSPACE_MENUS[this.currentWorkspaceRole];
+  }
+
+  isMenuItemLocked(item: { route: string }): boolean {
+    if (this.currentWorkspaceRole !== 'STUDENT' || !this.isNewUser) {
+      return false;
+    }
+
+    return item.route === '/student/tasks' || item.route.startsWith('/student/attendance');
+  }
+
+  getMenuItemLockTooltip(item: { route: string }): string | null {
+    return this.isMenuItemLocked(item) ? this.lockedMenuTooltip : null;
   }
 
   get profileItems(): HeaderProfileItem[] {
-    return this.profileItemsByRole[this.currentRole] || [];
+    if (!this.currentWorkspaceRole) {
+      return [];
+    }
+
+    return this.profileItemsByRole[this.currentWorkspaceRole];
   }
 
   get unreadNotificationsCount(): number {
@@ -348,14 +504,258 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.isProfileOpen = false;
       }
     }
+
+    if (this.isSearchOpen) {
+      const clickedDesktopSearch = !!this.desktopSearchContainer?.nativeElement?.contains(target);
+      const clickedMobileSearch = !!this.mobileSearchContainer?.nativeElement?.contains(target);
+      if (!clickedDesktopSearch && !clickedMobileSearch) {
+        this.closeSearchDropdown();
+      }
+    }
   }
 
   logout(): void {
     this.authService.logout();
     this.notificationService.clearAll();
+    this.clearSearch();
     this.closeMobileMenu();
     this.closeProfileMenu();
     this.router.navigate(['/auth/login']);
+  }
+
+  private closeSearchDropdown(): void {
+    this.isSearchOpen = false;
+    this.selectedSearchIndex = -1;
+    this.activeSearchSurface = null;
+  }
+
+  private shouldHandleSearchNavigation(): boolean {
+    return this.isSearchOpen && this.filteredSearchResults.length > 0;
+  }
+
+  private ensureSearchIndexLoaded(): void {
+    if (this.hasLoadedSearchIndex || this.isSearchLoading) {
+      return;
+    }
+
+    this.isSearchLoading = true;
+
+    forkJoin({
+      events: this.eventService.getEvents().pipe(catchError(() => of([] as EventModel[]))),
+      committees: this.committeeService.getCommittees().pipe(catchError(() => of([] as Committee[]))),
+      tasks: this.taskService.getTasks().pipe(catchError(() => of([] as Task[])))
+    }).subscribe({
+      next: ({ events, committees, tasks }) => {
+        this.searchIndex = [
+          ...this.mapEventsToSearchResults(events),
+          ...this.mapCommitteesToSearchResults(committees),
+          ...this.mapTasksToSearchResults(tasks)
+        ];
+
+        this.hasLoadedSearchIndex = true;
+        this.isSearchLoading = false;
+
+        if (this.hasSearchQuery) {
+          this.applySearch();
+        }
+      },
+      error: () => {
+        this.searchIndex = [];
+        this.hasLoadedSearchIndex = true;
+        this.isSearchLoading = false;
+
+        if (this.hasSearchQuery) {
+          this.applySearch();
+        }
+      }
+    });
+  }
+
+  private applySearch(): void {
+    const query = this.normalizeSearchText(this.searchQuery);
+    if (!query) {
+      this.filteredSearchResults = [];
+      this.searchSections = [];
+      this.isSearchOpen = false;
+      return;
+    }
+
+    const rankedResults = this.searchIndex
+      .map((item) => {
+        const normalizedTitle = this.normalizeSearchText(item.title);
+        const normalizedSubtitle = this.normalizeSearchText(item.subtitle);
+        const combined = `${normalizedTitle} ${normalizedSubtitle}`.trim();
+
+        const combinedIndex = combined.indexOf(query);
+        if (combinedIndex === -1) {
+          return null;
+        }
+
+        const titleIndex = normalizedTitle.indexOf(query);
+        const subtitleIndex = normalizedSubtitle.indexOf(query);
+        let score = 100;
+
+        if (titleIndex === 0) {
+          score = 0;
+        } else if (titleIndex > 0) {
+          score = 10 + titleIndex;
+        } else if (subtitleIndex === 0) {
+          score = 30;
+        } else if (subtitleIndex > 0) {
+          score = 40 + subtitleIndex;
+        } else {
+          score = 70 + combinedIndex;
+        }
+
+        return {
+          item,
+          score: score + this.getSearchTypeWeight(item.type)
+        };
+      })
+      .filter((ranked): ranked is { item: SearchResultItem; score: number } => !!ranked)
+      .sort((left, right) => left.score - right.score || left.item.title.localeCompare(right.item.title))
+      .slice(0, 12)
+      .map((ranked) => ranked.item);
+
+    const events = rankedResults.filter((item) => item.type === 'EVENT');
+    const committees = rankedResults.filter((item) => item.type === 'COMMITTEE');
+    const tasks = rankedResults.filter((item) => item.type === 'TASK');
+
+    this.searchSections = [
+      { type: 'EVENT' as const, title: 'Events', items: events },
+      { type: 'COMMITTEE' as const, title: 'Committees', items: committees },
+      { type: 'TASK' as const, title: 'Tasks', items: tasks }
+    ].filter((section) => section.items.length > 0);
+
+    this.filteredSearchResults = this.searchSections.flatMap((section) => section.items);
+    this.isSearchOpen = true;
+  }
+
+  private mapEventsToSearchResults(events: EventModel[]): SearchResultItem[] {
+    return (events || [])
+      .filter((event) => Number.isFinite(Number(event.id)) && !!event.eventName?.trim())
+      .map((event) => {
+        const eventId = Number(event.id);
+        const subtitleParts = [
+          this.formatSearchDate(event.eventDate),
+          (event.location || '').trim()
+        ].filter((value) => !!value);
+
+        return {
+          type: 'EVENT' as const,
+          id: eventId,
+          title: event.eventName.trim(),
+          subtitle: subtitleParts.join(' | '),
+          route: this.resolveSearchRoute('EVENT', eventId),
+          icon: 'event'
+        };
+      });
+  }
+
+  private mapCommitteesToSearchResults(committees: Committee[]): SearchResultItem[] {
+    return (committees || [])
+      .filter((committee) => Number.isFinite(Number(committee.id)) && !!committee.committeeName?.trim())
+      .map((committee) => {
+        const committeeId = Number(committee.id);
+        const subtitleParts = [
+          (committee.facultyInchargeName || '').trim(),
+          (committee.committeeInfo || '').trim()
+        ].filter((value) => !!value);
+
+        return {
+          type: 'COMMITTEE' as const,
+          id: committeeId,
+          title: committee.committeeName.trim(),
+          subtitle: subtitleParts.join(' | '),
+          route: this.resolveSearchRoute('COMMITTEE', committeeId),
+          icon: 'groups'
+        };
+      });
+  }
+
+  private mapTasksToSearchResults(tasks: Task[]): SearchResultItem[] {
+    return (tasks || [])
+      .filter((task) => Number.isFinite(Number(task.id)) && !!task.title?.trim())
+      .map((task) => {
+        const taskId = Number(task.id);
+        const subtitleParts = [
+          this.formatStatusForSearch(task.status),
+          this.formatPriorityForSearch(task.priority),
+          (task.committeeName || '').trim()
+        ].filter((value) => !!value);
+
+        return {
+          type: 'TASK' as const,
+          id: taskId,
+          title: task.title.trim(),
+          subtitle: subtitleParts.join(' | '),
+          route: this.resolveSearchRoute('TASK', taskId),
+          icon: 'task_alt'
+        };
+      });
+  }
+
+  private resolveSearchRoute(type: SearchEntityType, id: number): string {
+    const isStudent = this.currentWorkspaceRole === 'STUDENT';
+
+    if (type === 'EVENT') {
+      return isStudent ? `/student/events/${id}` : `/events/${id}`;
+    }
+
+    if (type === 'COMMITTEE') {
+      return isStudent ? `/student/committees/${id}` : `/committees/${id}`;
+    }
+
+    return isStudent ? `/student/tasks/${id}` : `/tasks/${id}`;
+  }
+
+  private formatSearchDate(rawValue: string | undefined): string {
+    if (!rawValue) {
+      return '';
+    }
+
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return '';
+    }
+
+    return parsed.toLocaleDateString(undefined, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  private formatStatusForSearch(status: string | undefined): string {
+    const normalized = this.normalizeSearchText(status).replace(/_/g, ' ');
+    if (!normalized) {
+      return '';
+    }
+
+    return `Status: ${normalized}`;
+  }
+
+  private formatPriorityForSearch(priority: string | undefined): string {
+    const normalized = this.normalizeSearchText(priority).replace(/_/g, ' ');
+    if (!normalized) {
+      return '';
+    }
+
+    return `Priority: ${normalized}`;
+  }
+
+  private normalizeSearchText(value: string | undefined): string {
+    return (value || '').trim().toLowerCase();
+  }
+
+  private getSearchTypeWeight(type: SearchEntityType): number {
+    if (type === 'EVENT') {
+      return 0;
+    }
+    if (type === 'COMMITTEE') {
+      return 5;
+    }
+    return 10;
   }
 
 }

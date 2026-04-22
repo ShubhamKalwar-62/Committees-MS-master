@@ -1,0 +1,14 @@
+<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl">
+  <h4 class="text-sm font-bold uppercase tracking-[0.08em] text-slate-500">{{ title }}</h4>
+
+  <div class="mt-5 flex items-center justify-center">
+    <div class="inline-flex h-40 w-40 items-center justify-center rounded-full p-3" [style.background]="ringStyle">
+      <div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white text-center">
+        <strong class="text-[2rem] font-extrabold leading-none text-slate-900">{{ value }}</strong>
+        <span class="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{{ clampedPercentage }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <p *ngIf="subtitle" class="mt-4 text-center text-sm text-slate-500">{{ subtitle }}</p>
+</article>

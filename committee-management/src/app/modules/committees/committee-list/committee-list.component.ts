@@ -10,22 +10,22 @@ import { CommitteeService } from '../../../services/committee.service';
 })
 export class CommitteeListComponent {
   committees: Committee[] = [];
-  loading = true;
+  isLoading = true;
   errorMessage = '';
 
   constructor(private committeeService: CommitteeService) {}
 
   ngOnInit(): void {
-    this.loading = true;
+    this.isLoading = true;
     this.errorMessage = '';
 
     this.committeeService.getCommittees().subscribe({
       next: (committees) => {
-        this.loading = false;
-        this.committees = committees;
+        this.isLoading = false;
+        this.committees = committees || [];
       },
       error: () => {
-        this.loading = false;
+        this.isLoading = false;
         this.committees = [];
         this.errorMessage = 'Unable to load committees right now. Please refresh and try again.';
       }

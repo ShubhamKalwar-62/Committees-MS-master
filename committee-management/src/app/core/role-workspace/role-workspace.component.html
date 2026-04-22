@@ -1,7 +1,8 @@
-<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-[#f7f8fb] px-4 pb-5 pt-5 lg:flex">
+<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-[#f7f8fb] px-4 pb-5 pt-5 md:flex">
   <div class="mb-7 px-2">
     <p class="text-[1.75rem] font-extrabold leading-none tracking-[-0.02em] text-[#123f8b]">CommitteeOS</p>
     <p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ roleSubtitle }}</p>
+    <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{{ roleLabel }} Workspace</p>
   </div>
 
   <nav class="flex-1 space-y-3 overflow-y-auto pr-1">
@@ -12,6 +13,11 @@
       #rla="routerLinkActive"
       routerLinkActive="workspace-link-active"
       [routerLinkActiveOptions]="{ exact: false }"
+      [class.opacity-50]="isMenuItemLocked(item)"
+      [class.pointer-events-none]="isMenuItemLocked(item)"
+      [attr.aria-disabled]="isMenuItemLocked(item) ? 'true' : null"
+      [attr.tabindex]="isMenuItemLocked(item) ? '-1' : null"
+      [attr.title]="getMenuItemLockTooltip(item)"
       class="workspace-link group flex items-center gap-3 rounded-xl border-l-4 border-transparent px-3 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900"
     >
       <span class="material-icons text-[18px] text-slate-400 transition-colors group-hover:text-[#123f8b]" [ngClass]="rla.isActive ? 'text-[#123f8b]' : ''">{{ item.icon }}</span>

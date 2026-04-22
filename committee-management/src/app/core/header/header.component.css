@@ -176,11 +176,28 @@
 	box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
 }
 
-.top-link {
+.mobile-workspace-link {
 	display: inline-flex;
+	width: 100%;
 	align-items: center;
-	color: #ffffff !important;
+	gap: 0.65rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #475569 !important;
 	text-decoration: none !important;
+	transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-workspace-link:hover {
+	background: #f1f5f9;
+	color: #0f172a !important;
+	transform: translateX(2px);
+}
+
+.mobile-workspace-link-active {
+	background: linear-gradient(90deg, rgba(18, 63, 139, 0.12), rgba(18, 63, 139, 0.04));
+	color: #0f172a !important;
+	box-shadow: inset 0 0 0 1px rgba(18, 63, 139, 0.11), 0 10px 18px rgba(15, 23, 42, 0.05);
 }
 
 .workspace-brand {
@@ -191,6 +208,10 @@
 	line-height: 1;
 	color: #0f3f8b !important;
 	text-decoration: none !important;
+}
+
+.workspace-brand-sidebar-hidden {
+	display: inline-flex;
 }
 
 .workspace-brand-name {
@@ -221,6 +242,11 @@
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.workspace-search-container {
+	position: relative;
+	min-width: 0;
+}
+
 .workspace-search-shell-desktop {
 	display: none;
 }
@@ -248,6 +274,149 @@
 	color: #9ca3af;
 }
 
+.workspace-search-clear-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.85rem;
+	height: 1.85rem;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: #94a3b8;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.workspace-search-clear-btn:hover {
+	background: #e2e8f0;
+	color: #334155;
+}
+
+.workspace-search-dropdown {
+	position: absolute;
+	top: calc(100% + 0.45rem);
+	left: 0;
+	right: 0;
+	z-index: 72;
+	max-height: min(24rem, 60vh);
+	overflow-y: auto;
+	border: 1px solid #dbe5f3;
+	border-radius: 1rem;
+	background: #ffffff;
+	box-shadow: 0 20px 36px rgba(15, 23, 42, 0.14);
+	padding: 0.35rem;
+	overscroll-behavior: contain;
+}
+
+.search-dropdown-state {
+	padding: 0.8rem;
+	text-align: center;
+	font-size: 0.84rem;
+	font-weight: 600;
+	color: #64748b;
+}
+
+.search-section-group + .search-section-group {
+	margin-top: 0.3rem;
+	padding-top: 0.35rem;
+	border-top: 1px dashed #e2e8f0;
+}
+
+.search-section-title {
+	margin: 0;
+	padding: 0.25rem 0.55rem 0.2rem;
+	font-size: 0.66rem;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #64748b;
+}
+
+.search-result-item {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.65rem;
+	border: 0;
+	border-radius: 0.75rem;
+	background: transparent;
+	padding: 0.6rem;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.search-result-item:hover,
+.search-result-item-active {
+	background: #f1f5f9;
+	transform: translateY(-1px);
+}
+
+.search-result-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.95rem;
+	height: 1.95rem;
+	flex-shrink: 0;
+	border-radius: 0.65rem;
+	background: #e2e8f0;
+	color: #334155;
+}
+
+.search-result-title {
+	display: block;
+	font-size: 0.84rem;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #0f172a;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.search-result-subtitle {
+	display: block;
+	margin-top: 0.16rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.25;
+	color: #64748b;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.search-result-type {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.18rem 0.48rem;
+	border-radius: 999px;
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.search-result-type-event {
+	background: #dbeafe;
+	color: #1d4ed8;
+}
+
+.search-result-type-committee {
+	background: #e0e7ff;
+	color: #4338ca;
+}
+
+.search-result-type-task {
+	background: #dcfce7;
+	color: #15803d;
+}
+
+.workspace-search-dropdown-mobile {
+	position: static;
+	margin-top: 0.45rem;
+}
+
 .topbar-icon-btn {
 	display: inline-flex;
 	height: 2.55rem;
@@ -272,8 +441,13 @@
 }
 
 @media (min-width: 1024px) {
+	.workspace-brand-sidebar-hidden {
+		display: none;
+	}
+
 	.workspace-search-shell-desktop {
 		display: flex;
+		flex: 1;
 	}
 
 	.workspace-search-shell-mobile {
@@ -281,6 +455,21 @@
 	}
 
 	.topbar-mobile-menu-btn {
+		display: none;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.workspace-brand-sidebar-hidden {
+		display: none;
+	}
+
+	.workspace-search-shell-desktop {
+		display: flex;
+		flex: 1;
+	}
+
+	.workspace-search-shell-mobile {
 		display: none;
 	}
 }

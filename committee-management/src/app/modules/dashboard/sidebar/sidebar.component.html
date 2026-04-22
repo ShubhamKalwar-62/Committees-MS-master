@@ -10,6 +10,11 @@
 			[routerLink]="item.route"
 			routerLinkActive="bg-blue-600 text-white shadow-lg"
 			[routerLinkActiveOptions]="{ exact: false }"
+			[class.opacity-50]="isMenuItemLocked(item)"
+			[class.pointer-events-none]="isMenuItemLocked(item)"
+			[attr.aria-disabled]="isMenuItemLocked(item) ? 'true' : null"
+			[attr.tabindex]="isMenuItemLocked(item) ? '-1' : null"
+			[attr.title]="getMenuItemLockTooltip(item)"
 			class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-blue-50 hover:text-blue-700 hover:shadow-xl transition-all">
 			<span class="material-icons">
 				{{ item.icon }}
