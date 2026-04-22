@@ -29,10 +29,16 @@ This creates all current tables:
 - events
 - announcements
 - task
-- event_participants
+- event_registrations
 - event_feedback
 - event_media
 - attendance
+
+If you already have an existing database using `event_participants`, run this migration after schema updates:
+
+```bash
+psql -U postgres -h localhost -d committees_db -f migrate_event_participants_to_event_registrations.sql
+```
 
 ## 3) Optional demo seed
 

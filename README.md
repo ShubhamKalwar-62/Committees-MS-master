@@ -156,6 +156,7 @@ Login returns JWT token and role. Frontend stores token in localStorage and send
 - /api/committees
 - /api/event-categories
 - /api/events
+- /api/registrations
 - /api/event-participants
 - /api/event-feedback
 - /api/event-media
@@ -175,7 +176,7 @@ Core tables/entities:
 - events
 - announcements
 - task
-- event_participants
+- event_registrations
 - event_feedback
 - event_media
 - attendance
