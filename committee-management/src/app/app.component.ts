@@ -24,11 +24,11 @@ export class AppComponent {
     }
 
     const path = this.router.url.split('?')[0].split('#')[0];
-    return path !== '/' && !path.startsWith('/auth');
+    return path !== '/' && path !== '/landing' && !path.startsWith('/auth');
   }
 
   get isLandingRoute(): boolean {
     const path = this.router.url.split('?')[0].split('#')[0];
-    return path === '/';
+    return path === '/' || path === '/landing';
   }
 }

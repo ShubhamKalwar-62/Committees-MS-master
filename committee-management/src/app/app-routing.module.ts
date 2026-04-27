@@ -5,7 +5,8 @@ import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 
 const routes: Routes = [
-  { path: '', component: LandingPageComponent },
+  { path: '', redirectTo: 'landing', pathMatch: 'full' },
+  { path: 'landing', component: LandingPageComponent },
   {
     path: 'auth',
     loadChildren: () => import('./modules/auth/auth.module').then((m) => m.AuthModule)
@@ -99,7 +100,7 @@ const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADMIN', 'FACULTY', 'STUDENT'] }
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'landing' }
 ];
 
 @NgModule({

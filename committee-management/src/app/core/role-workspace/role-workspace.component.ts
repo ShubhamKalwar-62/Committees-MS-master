@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { StudentOnboardingService } from '../../services/student-onboarding.service';
+import { UserStateService } from '../../services/user-state.service';
 import { ROLE_WORKSPACE_MENUS, RoleWorkspaceItem, WorkspaceRole } from '../navigation/role-navigation.config';
 
 @Component({
@@ -13,13 +14,18 @@ import { ROLE_WORKSPACE_MENUS, RoleWorkspaceItem, WorkspaceRole } from '../navig
 })
 export class RoleWorkspaceComponent implements OnInit, OnDestroy {
   isNewUser = false;
+  hasEvents = false;
+  hasTasks = false;
+  hasAttendance = false;
   private readonly lockedMenuTooltip = 'Complete onboarding to unlock';
   private onboardingSubscription?: Subscription;
+  private userStateSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private studentOnboardingService: StudentOnboardingService
+    private studentOnboardingService: StudentOnboardingService,
+    private userStateService: UserStateService
   ) {}
 
   ngOnInit(): void {
@@ -27,11 +33,24 @@ export class RoleWorkspaceComponent implements OnInit, OnDestroy {
       this.isNewUser = status;
     });
 
+    this.userStateSubscription = this.userStateService.hasEvents$.subscribe((status) => {
+      this.hasEvents = status;
+    });
+
+    this.userStateSubscription?.add(this.userStateService.hasTasks$.subscribe((status) => {
+      this.hasTasks = status;
+    }));
+
+    this.userStateSubscription?.add(this.userStateService.hasAttendance$.subscribe((status) => {
+      this.hasAttendance = status;
+    }));
+
     this.studentOnboardingService.refreshStatus();
   }
 
   ngOnDestroy(): void {
     this.onboardingSubscription?.unsubscribe();
+    this.userStateSubscription?.unsubscribe();
   }
 
   get role(): WorkspaceRole | null {
@@ -60,7 +79,12 @@ export class RoleWorkspaceComponent implements OnInit, OnDestroy {
   }
 
   isMenuItemLocked(item: RoleWorkspaceItem): boolean {
-    if (this.role !== 'STUDENT' || !this.isNewUser) {
+    if (this.role !== 'STUDENT') {
+      return false;
+    }
+
+    const shouldLock = this.isNewUser && !this.hasEvents && !this.hasTasks && !this.hasAttendance;
+    if (!shouldLock) {
       return false;
     }
 
@@ -69,6 +93,10 @@ export class RoleWorkspaceComponent implements OnInit, OnDestroy {
 
   getMenuItemLockTooltip(item: RoleWorkspaceItem): string | null {
     return this.isMenuItemLocked(item) ? this.lockedMenuTooltip : null;
+  }
+
+  navigateToLanding(): void {
+    void this.router.navigate(['/landing']);
   }
 
   logout(): void {

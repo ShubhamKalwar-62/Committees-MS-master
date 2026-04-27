@@ -113,7 +113,7 @@ export class StudentProfileComponent implements OnInit, AfterViewInit {
 
   get displayName(): string {
     const fallback = this.profile.email.includes('@') ? this.profile.email.split('@')[0] : this.profile.email;
-    return (this.profile.name || fallback || 'suraj').trim().toLowerCase();
+    return (this.profile.name || fallback || 'student').trim().toLowerCase();
   }
 
   get profileInitial(): string {
@@ -384,7 +384,7 @@ export class StudentProfileComponent implements OnInit, AfterViewInit {
         this.profile = {
           email: '',
           role: this.authService.getCurrentRole() || 'STUDENT',
-          name: 'suraj'
+          name: 'Student'
         };
         this.avatarDataUrl = '';
         this.committees = [];
@@ -398,7 +398,9 @@ export class StudentProfileComponent implements OnInit, AfterViewInit {
 
     combineLatest([
       this.taskService.getTasks().pipe(catchError(() => of([] as Task[]))),
-      this.attendanceService.getAttendanceList().pipe(catchError(() => of([] as Attendance[])))
+      this.attendanceService.getAttendanceList(
+        this.profile.userId ? { userId: this.profile.userId } : undefined
+      ).pipe(catchError(() => of([] as Attendance[])))
     ]).subscribe(([tasks, records]) => {
       const scopedTasks = this.scopeTasksToCurrentStudent(tasks);
       const scopedAttendance = this.scopeAttendanceToCurrentStudent(records);

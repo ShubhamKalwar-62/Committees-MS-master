@@ -3,12 +3,13 @@ import { BehaviorSubject, combineLatest, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { Attendance } from '../models/attendance.model';
 import { MyProfileResponse } from '../models/auth.model';
-import { Event } from '../models/event.model';
+import { EventRegistration } from '../models/registration.model';
 import { Task } from '../models/task.model';
 import { AttendanceService } from './attendance.service';
 import { AuthService } from './auth.service';
 import { EventService } from './event.service';
 import { TaskService } from './task.service';
+import { UserStateService } from './user-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,8 @@ export class StudentOnboardingService {
     private authService: AuthService,
     private taskService: TaskService,
     private attendanceService: AttendanceService,
-    private eventService: EventService
+    private eventService: EventService,
+    private userStateService: UserStateService
   ) {}
 
   get isNewUser(): boolean {
@@ -37,6 +39,7 @@ export class StudentOnboardingService {
   refreshStatus(): void {
     const role = (this.authService.getCurrentRole() || '').toUpperCase();
     if (role !== 'STUDENT') {
+      this.userStateService.resetActivityState();
       this.isNewUserSubject.next(false);
       return;
     }
@@ -57,25 +60,36 @@ export class StudentOnboardingService {
           catchError(() => of([] as Task[]))
         );
 
-        const attendance$ = this.attendanceService.getAttendanceList().pipe(
+        const attendance$ = this.attendanceService.getAttendanceList(userId ? { userId } : undefined).pipe(
           catchError(() => of([] as Attendance[]))
         );
 
-        const events$ = userId
-          ? this.eventService.getRegisteredEventsForUser(userId).pipe(catchError(() => of([] as Event[])))
-          : of([] as Event[]);
+        const registrations$ = userId
+          ? this.eventService.getRegistrationsForUser(userId).pipe(catchError(() => of([] as EventRegistration[])))
+          : of([] as EventRegistration[]);
 
-        return combineLatest([tasks$, attendance$, events$, of(committeeMembershipCount), of(userId)]);
+        return combineLatest([tasks$, attendance$, registrations$, of(committeeMembershipCount), of(userId)]);
       })
     ).subscribe({
-      next: ([tasks, attendanceRecords, events, committeeMembershipCount, userId]) => {
+      next: ([tasks, attendanceRecords, registrations, committeeMembershipCount, userId]) => {
         const scopedTasks = this.scopeTasksToUser(tasks, userId);
         const scopedAttendance = this.scopeAttendanceToUser(attendanceRecords, userId);
+        const approvedRegistrations = registrations.filter((registration) => registration.status === 'APPROVED');
+
+        const hasTasks = scopedTasks.length > 0;
+        const hasAttendance = scopedAttendance.length > 0;
+        const hasEvents = approvedRegistrations.length > 0;
+
+        this.userStateService.setActivityState({
+          hasEvents,
+          hasTasks,
+          hasAttendance
+        });
 
         let isNewUser =
-          scopedTasks.length === 0 &&
-          scopedAttendance.length === 0 &&
-          events.length === 0;
+          !hasEvents &&
+          !hasTasks &&
+          !hasAttendance;
 
         if (committeeMembershipCount > 0) {
           isNewUser = false;
@@ -85,6 +99,7 @@ export class StudentOnboardingService {
         this.loading = false;
       },
       error: () => {
+        this.userStateService.resetActivityState();
         this.isNewUserSubject.next(false);
         this.loading = false;
       }

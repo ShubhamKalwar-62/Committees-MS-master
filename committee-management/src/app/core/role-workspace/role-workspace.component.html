@@ -1,6 +1,13 @@
 <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-[#f7f8fb] px-4 pb-5 pt-5 md:flex">
   <div class="mb-7 px-2">
-    <p class="text-[1.75rem] font-extrabold leading-none tracking-[-0.02em] text-[#123f8b]">CommitteeOS</p>
+    <button
+      type="button"
+      class="border-0 bg-transparent p-0 text-left"
+      (click)="navigateToLanding()"
+      aria-label="Go to landing page"
+    >
+      <p class="text-[1.75rem] font-extrabold leading-none tracking-[-0.02em] text-[#123f8b] hover:opacity-90">CommitteeOS</p>
+    </button>
     <p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ roleSubtitle }}</p>
     <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{{ roleLabel }} Workspace</p>
   </div>
@@ -26,7 +33,7 @@
   </nav>
 
   <div class="mt-auto space-y-2 border-t border-slate-200 pt-4">
-    <a [routerLink]="'/'" fragment="documentation" class="workspace-utility-link">
+    <a [routerLink]="'/landing'" fragment="documentation" class="workspace-utility-link">
       <span class="material-icons text-[17px]">help_outline</span>
       <span>Help</span>
     </a>

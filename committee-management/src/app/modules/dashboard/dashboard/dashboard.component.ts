@@ -18,6 +18,8 @@ import { Announcement } from '../../../models/announcement.model';
 import { User } from '../../../models/user.model';
 import { MyProfileResponse } from '../../../models/auth.model';
 import { StudentOnboardingService } from '../../../services/student-onboarding.service';
+import { EventRegistration } from '../../../models/registration.model';
+import { UserStateService } from '../../../services/user-state.service';
 
 type DashboardRole = 'ADMIN' | 'FACULTY' | 'STUDENT';
 type StatTone = 'blue' | 'indigo' | 'green' | 'amber' | 'gray';
@@ -181,7 +183,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     private attendanceService: AttendanceService,
     private announcementService: AnnouncementService,
     private userService: UserService,
-    private studentOnboardingService: StudentOnboardingService
+    private studentOnboardingService: StudentOnboardingService,
+    private userStateService: UserStateService
   ) {}
 
   get showStudentOnboarding(): boolean {
@@ -287,24 +290,30 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           ? this.userService.getUsers().pipe(catchError(() => of([] as User[])))
           : of([] as User[]);
 
-        const registeredEvents$ = role === 'STUDENT' && userId
-          ? this.eventService.getRegisteredEventsForUser(userId).pipe(catchError(() => of([] as Event[])))
-          : of([] as Event[]);
+        const registrations$ = role === 'STUDENT' && userId
+          ? this.eventService.getRegistrationsForUser(userId).pipe(catchError(() => of([] as EventRegistration[])))
+          : of([] as EventRegistration[]);
 
         return combineLatest([
           of(profile),
           this.eventService.getEvents().pipe(catchError(() => of([] as Event[]))),
           this.taskService.getTasks().pipe(catchError(() => of([] as Task[]))),
           this.committeeService.getCommittees().pipe(catchError(() => of([] as Committee[]))),
-          this.attendanceService.getAttendanceList().pipe(catchError(() => of([] as Attendance[]))),
+          (role === 'STUDENT' && userId
+            ? this.attendanceService.getAttendanceList({ userId })
+            : this.attendanceService.getAttendanceList()).pipe(catchError(() => of([] as Attendance[]))),
           this.announcementService.getAnnouncements().pipe(catchError(() => of([] as Announcement[]))),
           users$,
-          registeredEvents$
+          registrations$
         ]);
       })
     ).subscribe(([profile, events, tasks, committees, records, announcements, users, registeredEvents]) => {
       const userId = profile.userId || null;
-      const scopedRegisteredEvents = role === 'STUDENT' ? (registeredEvents || []) : [];
+      const scopedRegistrations = role === 'STUDENT' ? (registeredEvents || []) : [];
+      const scopedRegisteredEvents = role === 'STUDENT' ? this.mapRegistrationsToEvents(scopedRegistrations) : [];
+      const scopedApprovedEvents = role === 'STUDENT'
+        ? this.mapRegistrationsToEvents(scopedRegistrations.filter((registration) => registration.status === 'APPROVED'))
+        : [];
       const scopedCommittees = this.scopeCommitteesForRole(role, committees, profile, userId);
       const scopedEvents = this.scopeEventsForRole(role, events, scopedRegisteredEvents, scopedCommittees);
       const scopedTasks = this.scopeTasksForRole(role, tasks, userId);
@@ -389,10 +398,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.attendanceRecords = scopedRecords;
         this.events = scopedEvents;
 
+        const hasTasks = this.tasks.length > 0;
+        const hasAttendance = this.attendanceRecords.length > 0;
+        const hasApprovedEvents = scopedApprovedEvents.length > 0;
+
+        this.userStateService.setActivityState({
+          hasEvents: hasApprovedEvents,
+          hasTasks,
+          hasAttendance
+        });
+
         this.isNewUser =
-          this.tasks.length === 0 &&
-          this.attendanceRecords.length === 0 &&
-          this.events.length === 0;
+          !hasApprovedEvents &&
+          !hasTasks &&
+          !hasAttendance;
 
         if ((profile.committeeMemberships || []).length > 0) {
           this.isNewUser = false;
@@ -441,6 +460,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.attendanceRecords = [];
         this.events = [];
         this.isNewUser = false;
+        this.userStateService.resetActivityState();
         this.studentOnboardingService.setIsNewUser(false);
       }
 
@@ -765,6 +785,39 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       attendanceSeries,
       attendanceMax: 100
     };
+  }
+
+  private mapRegistrationsToEvents(registrations: EventRegistration[]): Event[] {
+    const mappedEvents = registrations
+      .map((registration) => {
+        const eventId = Number(registration.eventId);
+        if (!Number.isFinite(eventId) || eventId <= 0) {
+          return null;
+        }
+
+        return {
+          id: eventId,
+          eventName: registration.eventName || 'Event',
+          eventDate: registration.eventDate || '',
+          location: registration.eventLocation,
+          registrationId: registration.id,
+          registrationStatus: registration.status,
+          registeredAt: registration.registeredAt,
+          approvedAt: registration.approvedAt
+        } as Event;
+      })
+      .filter((item): item is Event => !!item);
+
+    const seen = new Set<number>();
+    return mappedEvents.filter((event) => {
+      const eventId = Number(event.id);
+      if (!Number.isFinite(eventId) || seen.has(eventId)) {
+        return false;
+      }
+
+      seen.add(eventId);
+      return true;
+    });
   }
 
   private scopeTasksForRole(role: DashboardRole, tasks: Task[], userId: number | null): Task[] {

@@ -21,11 +21,13 @@ export class AttendanceListComponent {
   events: EventModel[] = [];
   users: User[] = [];
   selectedEventId?: number;
+  currentUserId: number | null = null;
   startDate = '';
   endDate = '';
   isLoading = true;
   errorMessage = '';
   private referenceDataLoaded = false;
+  private hasResolvedStudentProfile = false;
 
   constructor(
     private attendanceService: AttendanceService,
@@ -62,7 +64,7 @@ export class AttendanceListComponent {
         this.loadReferenceData();
       }
 
-      this.loadAttendanceRecords();
+      this.resolveUserContextAndLoadRecords();
     });
   }
 
@@ -137,6 +139,13 @@ export class AttendanceListComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
+    if (this.authService.isStudentRole() && !this.currentUserId) {
+      this.isLoading = false;
+      this.records = [];
+      this.errorMessage = 'Unable to identify your profile. Please sign in again and retry.';
+      return;
+    }
+
     this.attendanceService.getAttendanceList(this.buildFilters()).subscribe({
       next: (records) => {
         this.isLoading = false;
@@ -150,10 +159,42 @@ export class AttendanceListComponent {
     });
   }
 
+  private resolveUserContextAndLoadRecords(): void {
+    if (!this.authService.isStudentRole()) {
+      this.loadAttendanceRecords();
+      return;
+    }
+
+    if (this.hasResolvedStudentProfile) {
+      this.loadAttendanceRecords();
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.authService.getMyProfile().subscribe({
+      next: (profile) => {
+        this.currentUserId = profile.userId ?? null;
+        this.hasResolvedStudentProfile = true;
+        this.loadAttendanceRecords();
+      },
+      error: () => {
+        this.currentUserId = null;
+        this.hasResolvedStudentProfile = true;
+        this.loadAttendanceRecords();
+      }
+    });
+  }
+
   private buildFilters(): AttendanceFilters {
     const filters: AttendanceFilters = {};
     if (this.selectedEventId) {
       filters.eventId = this.selectedEventId;
+    }
+
+    if (this.authService.isStudentRole() && this.currentUserId) {
+      filters.userId = this.currentUserId;
     }
 
     if (this.startDate) {

@@ -7,6 +7,7 @@ import { QrAttendanceSession, QrScanResult } from '../models/qr-attendance.model
 
 export type AttendanceFilters = {
   eventId?: number;
+  userId?: number;
   startDate?: string;
   endDate?: string;
 };
@@ -47,6 +48,9 @@ export class AttendanceService {
     let params = new HttpParams();
     if (filters?.eventId) {
       params = params.set('eventId', String(filters.eventId));
+    }
+    if (filters?.userId) {
+      params = params.set('userId', String(filters.userId));
     }
     if (filters?.startDate) {
       params = params.set('startDate', filters.startDate);

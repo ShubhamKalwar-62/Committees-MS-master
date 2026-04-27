@@ -11,6 +11,7 @@ import { EventService } from '../../services/event.service';
 import { NotificationService } from '../../services/notification.service';
 import { StudentOnboardingService } from '../../services/student-onboarding.service';
 import { TaskService } from '../../services/task.service';
+import { UserStateService } from '../../services/user-state.service';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -21,6 +22,7 @@ describe('HeaderComponent', () => {
   let taskServiceSpy: jasmine.SpyObj<TaskService>;
   let notificationServiceSpy: jasmine.SpyObj<NotificationService>;
   let studentOnboardingServiceSpy: jasmine.SpyObj<StudentOnboardingService>;
+  let userStateServiceSpy: jasmine.SpyObj<UserStateService>;
 
   beforeEach(async () => {
     authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['isAuthenticated', 'getCurrentRole', 'getRoleHomeRoute', 'logout']);
@@ -32,6 +34,11 @@ describe('HeaderComponent', () => {
     });
     studentOnboardingServiceSpy = jasmine.createSpyObj<StudentOnboardingService>('StudentOnboardingService', ['refreshStatus'], {
       isNewUser$: of(true)
+    });
+    userStateServiceSpy = jasmine.createSpyObj<UserStateService>('UserStateService', [], {
+      hasEvents$: of(false),
+      hasTasks$: of(false),
+      hasAttendance$: of(false)
     });
 
     authServiceSpy.isAuthenticated.and.returnValue(true);
@@ -49,7 +56,8 @@ describe('HeaderComponent', () => {
         { provide: CommitteeService, useValue: committeeServiceSpy },
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: NotificationService, useValue: notificationServiceSpy },
-        { provide: StudentOnboardingService, useValue: studentOnboardingServiceSpy }
+        { provide: StudentOnboardingService, useValue: studentOnboardingServiceSpy },
+        { provide: UserStateService, useValue: userStateServiceSpy }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

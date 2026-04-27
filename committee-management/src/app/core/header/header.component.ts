@@ -10,6 +10,7 @@ import { EventService } from '../../services/event.service';
 import { AppNotification, NotificationService } from '../../services/notification.service';
 import { StudentOnboardingService } from '../../services/student-onboarding.service';
 import { TaskService } from '../../services/task.service';
+import { UserStateService } from '../../services/user-state.service';
 import { ROLE_WORKSPACE_MENUS, RoleWorkspaceItem, WorkspaceRole } from '../navigation/role-navigation.config';
 
 type HeaderProfileItem = {
@@ -66,12 +67,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   activeSearchSurface: SearchSurface | null = null;
   notificationFilter: 'all' | 'unread' = 'all';
   notifications: AppNotification[] = [];
-  readonly landingRoute = '/';
+  readonly landingRoute = '/landing';
   readonly brandTagline = 'Campus Operations Platform';
   isNewUser = false;
+  hasEvents = false;
+  hasTasks = false;
+  hasAttendance = false;
   private readonly lockedMenuTooltip = 'Complete onboarding to unlock';
   private notificationsSubscription?: Subscription;
   private onboardingSubscription?: Subscription;
+  private userStateSubscription?: Subscription;
   private searchIndex: SearchResultItem[] = [];
   private hasLoadedSearchIndex = false;
 
@@ -105,6 +110,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private studentOnboardingService: StudentOnboardingService,
+    private userStateService: UserStateService,
     private eventService: EventService,
     private committeeService: CommitteeService,
     private taskService: TaskService
@@ -119,12 +125,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.isNewUser = status;
     });
 
+    this.userStateSubscription = this.userStateService.hasEvents$.subscribe((status) => {
+      this.hasEvents = status;
+    });
+
+    this.userStateSubscription?.add(this.userStateService.hasTasks$.subscribe((status) => {
+      this.hasTasks = status;
+    }));
+
+    this.userStateSubscription?.add(this.userStateService.hasAttendance$.subscribe((status) => {
+      this.hasAttendance = status;
+    }));
+
     this.studentOnboardingService.refreshStatus();
   }
 
   ngOnDestroy(): void {
     this.notificationsSubscription?.unsubscribe();
     this.onboardingSubscription?.unsubscribe();
+    this.userStateSubscription?.unsubscribe();
   }
 
   get isLoggedIn(): boolean {
@@ -133,7 +152,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   get isLandingRoute(): boolean {
     const path = this.router.url.split('?')[0].split('#')[0];
-    return path === '/';
+    return path === '/' || path === '/landing';
   }
 
   get usePremiumGuestNavbar(): boolean {
@@ -154,7 +173,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   get homeRoute(): string {
-    return this.isLoggedIn ? this.authService.getRoleHomeRoute() : '/';
+    return this.isLoggedIn ? this.authService.getRoleHomeRoute() : '/landing';
   }
 
   get workspaceBrandName(): string {
@@ -309,7 +328,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   isMenuItemLocked(item: { route: string }): boolean {
-    if (this.currentWorkspaceRole !== 'STUDENT' || !this.isNewUser) {
+    if (this.currentWorkspaceRole !== 'STUDENT') {
+      return false;
+    }
+
+    const shouldLock = this.isNewUser && !this.hasEvents && !this.hasTasks && !this.hasAttendance;
+    if (!shouldLock) {
       return false;
     }
 

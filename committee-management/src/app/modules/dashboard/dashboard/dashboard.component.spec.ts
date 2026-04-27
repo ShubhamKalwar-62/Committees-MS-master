@@ -11,6 +11,7 @@ import { AttendanceService } from '../../../services/attendance.service';
 import { AnnouncementService } from '../../../services/announcement.service';
 import { UserService } from '../../../services/user.service';
 import { StudentOnboardingService } from '../../../services/student-onboarding.service';
+import { UserStateService } from '../../../services/user-state.service';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -24,6 +25,7 @@ describe('DashboardComponent', () => {
   let announcementServiceSpy: jasmine.SpyObj<AnnouncementService>;
   let userServiceSpy: jasmine.SpyObj<UserService>;
   let studentOnboardingServiceSpy: jasmine.SpyObj<StudentOnboardingService>;
+  let userStateServiceSpy: jasmine.SpyObj<UserStateService>;
 
   const buildComponent = async (): Promise<void> => {
     await TestBed.configureTestingModule({
@@ -36,7 +38,8 @@ describe('DashboardComponent', () => {
         { provide: AttendanceService, useValue: attendanceServiceSpy },
         { provide: AnnouncementService, useValue: announcementServiceSpy },
         { provide: UserService, useValue: userServiceSpy },
-        { provide: StudentOnboardingService, useValue: studentOnboardingServiceSpy }
+        { provide: StudentOnboardingService, useValue: studentOnboardingServiceSpy },
+        { provide: UserStateService, useValue: userStateServiceSpy }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
@@ -48,13 +51,14 @@ describe('DashboardComponent', () => {
 
   beforeEach(() => {
     authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['getCurrentRole', 'getMyProfile']);
-    eventServiceSpy = jasmine.createSpyObj<EventService>('EventService', ['getEvents', 'getRegisteredEventsForUser']);
+    eventServiceSpy = jasmine.createSpyObj<EventService>('EventService', ['getEvents', 'getRegistrationsForUser']);
     taskServiceSpy = jasmine.createSpyObj<TaskService>('TaskService', ['getTasks']);
     committeeServiceSpy = jasmine.createSpyObj<CommitteeService>('CommitteeService', ['getCommittees']);
     attendanceServiceSpy = jasmine.createSpyObj<AttendanceService>('AttendanceService', ['getAttendanceList']);
     announcementServiceSpy = jasmine.createSpyObj<AnnouncementService>('AnnouncementService', ['getAnnouncements']);
     userServiceSpy = jasmine.createSpyObj<UserService>('UserService', ['getUsers']);
     studentOnboardingServiceSpy = jasmine.createSpyObj<StudentOnboardingService>('StudentOnboardingService', ['setIsNewUser']);
+    userStateServiceSpy = jasmine.createSpyObj<UserStateService>('UserStateService', ['setActivityState', 'resetActivityState']);
 
     authServiceSpy.getCurrentRole.and.returnValue('STUDENT');
     authServiceSpy.getMyProfile.and.returnValue(of({
@@ -64,7 +68,7 @@ describe('DashboardComponent', () => {
     } as any));
 
     eventServiceSpy.getEvents.and.returnValue(of([]));
-    eventServiceSpy.getRegisteredEventsForUser.and.returnValue(of([]));
+    eventServiceSpy.getRegistrationsForUser.and.returnValue(of([]));
     taskServiceSpy.getTasks.and.returnValue(of([]));
     committeeServiceSpy.getCommittees.and.returnValue(of([]));
     attendanceServiceSpy.getAttendanceList.and.returnValue(of([]));
@@ -91,9 +95,9 @@ describe('DashboardComponent', () => {
     expect(studentOnboardingServiceSpy.setIsNewUser).toHaveBeenCalledWith(true);
   });
 
-  it('should unlock dashboard when student has a registered event', async () => {
-    eventServiceSpy.getRegisteredEventsForUser.and.returnValue(of([
-      { id: 1, eventName: 'Tech Event', eventDate: '2026-04-30T10:00:00' } as any
+  it('should unlock dashboard when student has an approved registration', async () => {
+    eventServiceSpy.getRegistrationsForUser.and.returnValue(of([
+      { id: 1, eventId: 1, eventName: 'Tech Event', eventDate: '2026-04-30T10:00:00', status: 'APPROVED' } as any
     ]));
 
     await buildComponent();
