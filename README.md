@@ -11,7 +11,7 @@ This repository now contains:
 2. JWT authentication and role-based route protection.
 3. Global exception handling and PATCH support across key resources.
 4. Angular frontend with feature modules for Auth, Dashboard, Users, Committees, Events, Tasks, Announcements, and Attendance.
-5. Demo seed script for professor/project presentation.
+5. Migration scripts for registration approvals, QR attendance sessions, interactive announcements, and users identity sync.
 
 ## Tech Stack
 
@@ -42,9 +42,12 @@ CREATE DATABASE committees_db;
 psql -U postgres -h localhost -d committees_db -f database_schema.sql
 ```
 
-3. (Optional but recommended for demo) Seed demo data:
+3. If you are upgrading an existing database, apply migrations in this order:
 ```bash
-psql -U postgres -h localhost -d committees_db -f seed_demo_v2.sql
+psql -U postgres -h localhost -d committees_db -f migrate_event_participants_to_event_registrations.sql
+psql -U postgres -h localhost -d committees_db -f migrate_registration_approval_and_qr_session.sql
+psql -U postgres -h localhost -d committees_db -f migrate_announcements_interactive_fields.sql
+psql -U postgres -h localhost -d committees_db -f migrate_users_email_role_fields.sql
 ```
 
 4. Update credentials in src/main/resources/application.properties.
@@ -187,7 +190,7 @@ Note: Committee chat has been removed from the active model and backend implemen
 
 1. Start PostgreSQL service.
 2. Apply schema (database_schema.sql).
-3. Apply demo seed (seed_demo_v2.sql).
+3. If using an existing DB, apply migrations in the documented order.
 4. Start backend.
 5. Start frontend.
 6. Register/login once from frontend.
@@ -227,6 +230,30 @@ npx ng build
 4. Open dashboard and confirm both charts are visible.
 5. Verify API docs at /swagger-ui/index.html.
 6. Run backend tests and frontend build before submission.
+
+## Production Verification (Part 1 to Part 11)
+
+Status: Completed in implementation and validated.
+
+- Backend tests: 15/15 passing.
+- Frontend tests: 64/64 passing.
+- Frontend production build: successful.
+
+### Final Result
+
+- Student flow: Registers -> waits approval -> scans QR -> attendance recorded.
+- Faculty flow: Approves -> starts QR session -> students scan -> attendance recorded.
+- System behavior: Secure time-based QR, proxy attendance prevention, real-time attendance tracking, production-level modular design.
+
+### Quick Smoke Test
+
+1. Student login -> register for event -> confirm status shows Pending Approval.
+2. Faculty/Admin login -> approve from pending registrations.
+3. Faculty/Admin -> start QR session for approved event.
+4. Student -> scan QR -> confirm success view includes user, event, and check-in time.
+5. Student re-scan same session -> confirm duplicate blocked.
+6. Scan expired token -> confirm rejection.
+7. Verify live attendance count increases during active session.
 
 ## Repository Notes
 
