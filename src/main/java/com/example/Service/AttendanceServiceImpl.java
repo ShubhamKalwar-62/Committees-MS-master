@@ -40,7 +40,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public List<Attendance> getAttendanceByFilters(Integer eventId, LocalDateTime startDate, LocalDateTime endDate) {
+    public List<Attendance> getAttendanceByFilters(Integer eventId, Integer userId, LocalDateTime startDate, LocalDateTime endDate) {
         LocalDateTime normalizedStart = startDate;
         LocalDateTime normalizedEnd = endDate;
 
@@ -56,6 +56,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRepository.findAll().stream()
                 .filter(record -> eventId == null
                         || (record.getEvent() != null && Objects.equals(record.getEvent().getEventId(), eventId)))
+            .filter(record -> userId == null
+                || (record.getUser() != null && Objects.equals(record.getUser().getUserId(), userId)))
                 .filter(record -> {
                     LocalDateTime checkInTime = record.getCheckInTime();
                     if (checkInTime == null) {

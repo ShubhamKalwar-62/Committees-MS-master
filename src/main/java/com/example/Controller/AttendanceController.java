@@ -34,7 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.Entity.Attendance;
 import com.example.Entity.EventQrSession;
+import com.example.Entity.Users;
 import com.example.Exception.ResourceNotFoundException;
+import com.example.Repository.UsersRepository;
 import com.example.Response.ResponceBean;
 import com.example.Service.AttendanceService;
 import com.example.Service.QrAttendanceService;
@@ -60,17 +62,43 @@ public class AttendanceController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
     @GetMapping
     @Operation(summary = "Get all attendance", description = "Retrieve all attendance records")
     public ResponseEntity<ResponceBean<List<Attendance>>> getAllAttendance(
             @RequestParam(required = false) Integer eventId,
+            @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String requesterEmail = authentication != null ? authentication.getName() : null;
+
+            if (requesterEmail != null && !requesterEmail.isBlank() && !"anonymousUser".equalsIgnoreCase(requesterEmail)) {
+                Users requester = usersRepository.findByEmail(requesterEmail).orElse(null);
+                if (requester != null && requester.getLogin() != null && isStudentRole(requester.getLogin().getRole())) {
+                    Integer requesterUserId = requester.getUserId();
+                    if (requesterUserId == null || requesterUserId <= 0) {
+                        throw new AccessDeniedException("Unable to resolve current student profile");
+                    }
+
+                    if (userId != null && !requesterUserId.equals(userId)) {
+                        throw new AccessDeniedException("Students can only access their own attendance records");
+                    }
+
+                    userId = requesterUserId;
+                }
+            }
+
             LocalDateTime parsedStartDate = parseFlexibleDateTime(startDate, true);
             LocalDateTime parsedEndDate = parseFlexibleDateTime(endDate, false);
-            List<Attendance> records = attendanceService.getAttendanceByFilters(eventId, parsedStartDate, parsedEndDate);
+            List<Attendance> records = attendanceService.getAttendanceByFilters(eventId, userId, parsedStartDate, parsedEndDate);
             return ResponseEntity.ok(ResponceBean.success("Attendance retrieved successfully", records));
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ResponceBean.error(ex.getMessage()));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ResponceBean.error("Invalid attendance filter", ex.getMessage()));
@@ -355,6 +383,19 @@ public class AttendanceController {
 
         long seconds = Duration.between(LocalDateTime.now(), expiresAt).getSeconds();
         return Math.max(seconds, 0);
+    }
+
+    private boolean isStudentRole(String rawRole) {
+        if (rawRole == null || rawRole.isBlank()) {
+            return false;
+        }
+
+        String normalized = rawRole.trim().toUpperCase();
+        if (normalized.startsWith("ROLE_")) {
+            normalized = normalized.substring(5);
+        }
+
+        return "STUDENT".equals(normalized);
     }
 
     public static class AttendanceCreateRequest {

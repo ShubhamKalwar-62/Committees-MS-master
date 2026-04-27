@@ -10,7 +10,7 @@ import com.example.Entity.Attendance;
 
 public interface AttendanceService {
     List<Attendance> getAllAttendance();
-    List<Attendance> getAttendanceByFilters(Integer eventId, LocalDateTime startDate, LocalDateTime endDate);
+    List<Attendance> getAttendanceByFilters(Integer eventId, Integer userId, LocalDateTime startDate, LocalDateTime endDate);
     Optional<Attendance> getAttendanceById(@NonNull Integer id);
     Attendance markAttendance(Integer userId, Integer eventId, Attendance.AttendanceStatus status, LocalDateTime checkInTime, String remarks, Integer markedByUserId);
     List<Attendance> markAllPresent(Integer eventId, LocalDateTime checkInTime, String remarks, Integer markedByUserId);
