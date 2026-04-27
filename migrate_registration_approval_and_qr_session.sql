@@ -3,6 +3,11 @@ BEGIN;
 ALTER TABLE event_registrations
     ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
 
+-- Drop legacy/new status checks before remapping existing rows.
+ALTER TABLE event_registrations
+    DROP CONSTRAINT IF EXISTS ck_event_registrations_status,
+    DROP CONSTRAINT IF EXISTS ck_event_participants_status;
+
 UPDATE event_registrations
 SET status = CASE UPPER(status)
     WHEN 'REGISTERED' THEN 'PENDING'
@@ -18,9 +23,6 @@ END;
 ALTER TABLE event_registrations
     ALTER COLUMN status SET DEFAULT 'PENDING',
     ALTER COLUMN status SET NOT NULL;
-
-ALTER TABLE event_registrations
-    DROP CONSTRAINT IF EXISTS ck_event_registrations_status;
 
 ALTER TABLE event_registrations
     ADD CONSTRAINT ck_event_registrations_status
